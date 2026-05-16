@@ -112,7 +112,6 @@ nav > *{
 .chip:hover{background:var(--bg2)}
 .chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
 .chip.accent-on{background:var(--accent);color:white;border-color:var(--accent)}
-.fav-tab-icon{font-size:10px;opacity:0.75;vertical-align:middle;line-height:1}
 
 /* ── WARDROBE GRID ── */
 .wardrobe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
