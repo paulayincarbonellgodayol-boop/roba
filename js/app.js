@@ -127,16 +127,9 @@ async function recalcWearCounts(){
   const items = await dbGetAll('items');
   for(const item of items){
     const realCount = counts[item.id] || 0;
-    if(item.seeded && realCount !== item.wears){
-      // Keep seeded wears count (from spreadsheet totals) — real wears = seeded count
-      // But update lastWorn which we know from records
-    }
-    // For non-seeded items, wears = actual records
-    if(!item.seeded){
-      item.wears = realCount;
-      item.cpw = item.totalCost > 0 && realCount > 0 ? item.totalCost / realCount : item.totalCost;
-      await dbPut('items', item);
-    }
+    item.wears = realCount;
+    item.cpw = item.totalCost > 0 && realCount > 0 ? item.totalCost / realCount : item.totalCost;
+    await dbPut('items', item);
   }
 }
 
