@@ -154,9 +154,9 @@ nav > *{
 .empty{text-align:center;padding:4rem 2rem;color:var(--text3)}
 .empty-icon{font-size:3rem;margin-bottom:1rem;display:block}
 .empty-icon.empty-icon--heart{
-  width:3rem;
-  height:3rem;
-  margin:0 auto 1rem;
+  width:2rem;
+  height:2rem;
+  margin:0.9rem auto 1.9rem;
   position:relative;
   background:var(--accent);
   transform:rotate(-45deg);
@@ -165,16 +165,16 @@ nav > *{
 .empty-icon.empty-icon--heart::after{
   content:'';
   position:absolute;
-  width:3rem;
-  height:3rem;
+  width:2rem;
+  height:2rem;
   background:var(--accent);
   border-radius:50%;
 }
-.empty-icon.empty-icon--heart::before{top:-1.35rem;left:0}
-.empty-icon.empty-icon--heart::after{left:1.35rem;top:0}
+.empty-icon.empty-icon--heart::before{top:-0.9rem;left:0}
+.empty-icon.empty-icon--heart::after{left:0.9rem;top:0}
 .empty-icon.empty-icon--star{
-  width:3rem;
-  height:3rem;
+  width:3.3rem;
+  height:3.3rem;
   margin:0 auto 1rem;
   background:var(--gold);
   clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
