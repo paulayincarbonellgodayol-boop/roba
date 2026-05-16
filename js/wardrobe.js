@@ -38,6 +38,87 @@ const SEASON_LABELS  = {estiu:'Estiu',hivern:'Hivern',primavera:'Primavera',tard
 const FORMAL_LABELS  = {casual:'Casual','smart-casual':'Smart Casual',formal:'Formal'};
 const STATUS_LABELS  = {active:'Activa',retired:'Retirada','needs-info':'Cal info'};
 
+function buildSliderPanel(panelId, items, valueKey, unit, step){
+  const panel = document.getElementById(panelId);
+  if(!panel) return;
+  const vals = items.map(i => parseFloat(i[valueKey])||0).filter(v => v > 0);
+  if(!vals.length){ panel.innerHTML = '<div style="padding:0.75rem;font-size:12px;color:var(--text3)">Cap valor</div>'; return; }
+  const lo = Math.floor(Math.min(...vals));
+  const hi = Math.ceil(Math.max(...vals));
+  const fmtNum = v => step < 1 ? (+v).toFixed(2) : String(Math.round(+v));
+  const minId = panelId + '-min', maxId = panelId + '-max';
+  panel.innerHTML =
+    '<div style="padding:0.85rem 1rem 0.8rem;min-width:220px">'
+    + '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.65rem">'
+    + '<input type="number" id="' + minId + '-num" class="form-input" min="' + lo + '" max="' + hi + '" value="' + fmtNum(lo) + '" step="' + step + '" style="width:68px;padding:0.25rem 0.4rem;font-size:12px;text-align:center">'
+    + '<span style="font-size:12px;color:var(--text3);flex:1;text-align:center">—</span>'
+    + '<input type="number" id="' + maxId + '-num" class="form-input" min="' + lo + '" max="' + hi + '" value="' + fmtNum(hi) + '" step="' + step + '" style="width:68px;padding:0.25rem 0.4rem;font-size:12px;text-align:center">'
+    + '<span style="font-size:11px;color:var(--text3)">' + unit + '</span>'
+    + '</div>'
+    + '<div class="dbl-range-wrap">'
+    + '<div class="dbl-range-track"><div class="dbl-range-fill" id="' + panelId + '-fill"></div></div>'
+    + '<input type="range" class="dbl-range-thumb" id="' + minId + '" min="' + lo + '" max="' + hi + '" value="' + lo + '" step="' + step + '">'
+    + '<input type="range" class="dbl-range-thumb" id="' + maxId + '" min="' + lo + '" max="' + hi + '" value="' + hi + '" step="' + step + '">'
+    + '</div>'
+    + '</div>';
+
+  const minEl  = panel.querySelector('#' + minId),      maxEl  = panel.querySelector('#' + maxId);
+  const minNum = panel.querySelector('#' + minId + '-num'), maxNum = panel.querySelector('#' + maxId + '-num');
+  const fill   = panel.querySelector('#' + panelId + '-fill');
+  const range  = hi - lo;
+
+  const updateFill = () => {
+    const p1 = range ? (+minEl.value - lo) / range * 100 : 0;
+    const p2 = range ? (+maxEl.value - lo) / range * 100 : 100;
+    fill.style.left = p1 + '%';
+    fill.style.width = (p2 - p1) + '%';
+    minEl.style.zIndex = +minEl.value >= hi ? 2 : 1;
+  };
+
+  const fireFilter = () => { updateClearBtn(); wrdPage = 1; renderWardrobe(); };
+
+  const onSlide = () => {
+    if(+minEl.value > +maxEl.value) maxEl.value = minEl.value;
+    if(+maxEl.value < +minEl.value) minEl.value = maxEl.value;
+    minNum.value = fmtNum(minEl.value);
+    maxNum.value = fmtNum(maxEl.value);
+    updateFill(); fireFilter();
+  };
+
+  const onMinNum = () => {
+    let v = Math.max(lo, Math.min(+minNum.value, +maxEl.value));
+    if(isNaN(v)) return;
+    minEl.value = v; minNum.value = fmtNum(v); updateFill(); fireFilter();
+  };
+  const onMaxNum = () => {
+    let v = Math.min(hi, Math.max(+maxNum.value, +minEl.value));
+    if(isNaN(v)) return;
+    maxEl.value = v; maxNum.value = fmtNum(v); updateFill(); fireFilter();
+  };
+
+  minEl.addEventListener('input', onSlide);
+  maxEl.addEventListener('input', onSlide);
+  minNum.addEventListener('change', onMinNum);
+  maxNum.addEventListener('change', onMaxNum);
+  // Also update live as user types if value is valid
+  minNum.addEventListener('input', () => {
+    const v = +minNum.value;
+    if(v >= lo && v <= +maxEl.value){ minEl.value = v; updateFill(); fireFilter(); }
+  });
+  maxNum.addEventListener('input', () => {
+    const v = +maxNum.value;
+    if(v <= hi && v >= +minEl.value){ maxEl.value = v; updateFill(); fireFilter(); }
+  });
+
+  panel._reset = () => {
+    minEl.value = lo; maxEl.value = hi;
+    minNum.value = fmtNum(lo); maxNum.value = fmtNum(hi);
+    updateFill();
+  };
+
+  updateFill();
+}
+
 // ── Filter bar ──
 function buildFilterBar(allItems){
   if(wrdFilterBarBuilt) return;
@@ -45,10 +126,15 @@ function buildFilterBar(allItems){
 
   const colorSet = new Set();
   allItems.forEach(it => {
-    if(!it.color) return;
-    it.color.split(/\s+i\s+|,\s*/).forEach(c => { const t=c.trim(); if(t) colorSet.add(t); });
+    const cols = Array.isArray(it.colors) && it.colors.length
+      ? it.colors
+      : (it.color ? it.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean) : []);
+    cols.forEach(c => { if(c) colorSet.add(c); });
   });
-  const colors = [...colorSet].sort();
+  const sorted = [...colorSet].sort();
+  const mIdx = sorted.indexOf('multicolor');
+  if(mIdx > 0){ sorted.splice(mIdx, 1); sorted.unshift('multicolor'); }
+  const colors = sorted;
   const brands = [...new Set(allItems.map(i=>i.brand).filter(Boolean))].sort();
   const sizes  = [...new Set(allItems.map(i=>i.size).filter(Boolean))].sort();
 
@@ -58,6 +144,8 @@ function buildFilterBar(allItems){
   buildMultiPanel('fp-brand',    brands, null, 'brands');
   buildMultiPanel('fp-size',     sizes,  null, 'sizes');
   buildMultiPanel('fp-status',   Object.keys(STATUS_LABELS),  STATUS_LABELS,  'status');
+  buildSliderPanel('fp-price', allItems, 'price', '€',    1);
+  buildSliderPanel('fp-cpu',   allItems, 'cpw',   '€/ús', 0.05);
 
   document.querySelectorAll('.fbar-btn[data-fb]').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -69,6 +157,7 @@ function buildFilterBar(allItems){
     });
   });
   document.addEventListener('click', () => document.querySelectorAll('.fbar-panel').forEach(p=>p.classList.remove('open')));
+  document.querySelectorAll('.fbar-panel').forEach(p => p.addEventListener('click', e => e.stopPropagation()));
 }
 
 function buildMultiPanelWithFlowers(panelId, values, filterKey){
@@ -127,11 +216,11 @@ function updateBadge(filterKey){
 }
 
 function updateClearBtn(){
+  const pmEl = document.getElementById('fp-price-min'), pxEl = document.getElementById('fp-price-max');
+  const cmEl = document.getElementById('fp-cpu-min'),   cxEl = document.getElementById('fp-cpu-max');
   const has = ['seasons','formality','colors','brands','sizes','status'].some(k=>wrdActiveFilters[k].length>0)
-    || document.getElementById('fp-price-min')?.value
-    || document.getElementById('fp-price-max')?.value
-    || document.getElementById('fp-cpu-min')?.value
-    || document.getElementById('fp-cpu-max')?.value;
+    || (pmEl && +pmEl.value > +pmEl.min) || (pxEl && +pxEl.value < +pxEl.max)
+    || (cmEl && +cmEl.value > +cmEl.min) || (cxEl && +cxEl.value < +cxEl.max);
   const btn = document.getElementById('fbar-clear');
   if(btn) btn.style.display = has ? 'inline' : 'none';
 }
@@ -141,7 +230,7 @@ function clearAllFilters(){
   document.querySelectorAll('.fbar-panel input[type=checkbox]').forEach(cb=>cb.checked=false);
   document.querySelectorAll('.fbar-badge').forEach(b=>{b.textContent='';b.classList.remove('show');});
   document.querySelectorAll('.fbar-btn').forEach(b=>b.classList.remove('has-filter'));
-  ['fp-price-min','fp-price-max','fp-cpu-min','fp-cpu-max'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['fp-price','fp-cpu'].forEach(base => { const p = document.getElementById(base); if(p && p._reset) p._reset(); });
   updateClearBtn(); wrdPage=1; renderWardrobe();
 }
 
@@ -176,10 +265,12 @@ async function renderWardrobe(){
   if(!document.getElementById('cat-chips').children.length) buildWardrobeChips();
   buildFilterBar(items);
 
-  const pMin = parseFloat(document.getElementById('fp-price-min')?.value)||null;
-  const pMax = parseFloat(document.getElementById('fp-price-max')?.value)||null;
-  const cMin = parseFloat(document.getElementById('fp-cpu-min')?.value)||null;
-  const cMax = parseFloat(document.getElementById('fp-cpu-max')?.value)||null;
+  const pMinEl = document.getElementById('fp-price-min'), pMaxEl = document.getElementById('fp-price-max');
+  const cMinEl = document.getElementById('fp-cpu-min'),   cMaxEl = document.getElementById('fp-cpu-max');
+  const pMin = pMinEl && +pMinEl.value > +pMinEl.min ? +pMinEl.value : null;
+  const pMax = pMaxEl && +pMaxEl.value < +pMaxEl.max ? +pMaxEl.value : null;
+  const cMin = cMinEl && +cMinEl.value > +cMinEl.min ? +cMinEl.value : null;
+  const cMax = cMaxEl && +cMaxEl.value < +cMaxEl.max ? +cMaxEl.value : null;
   ['price','cpu'].forEach(k => {
     const min = k==='price'?pMin:cMin, max = k==='price'?pMax:cMax;
     const badge = document.getElementById('fb-badge-'+k);
@@ -263,7 +354,7 @@ async function renderWardrobe(){
   }).join('');
 
   grid.querySelectorAll('.item-card').forEach(card=>{
-    card.addEventListener('click', e=>{
+    card.addEventListener('click', ()=>{
       if(wrdSelectMode){
         const id=card.dataset.id, cb=card.querySelector('.select-checkbox');
         if(wrdSelected.has(id)){wrdSelected.delete(id);card.classList.remove('selected-card');if(cb)cb.checked=false;}

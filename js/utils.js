@@ -36,10 +36,13 @@ function isColorDark(hex){
   return (r*299 + g*587 + b*114)/1000 < 128;
 }
 
+const RAINBOW_PETALS = ['#C8272A','#E07830','#E8C820','#2A7A3A','#2A5AAF','#8B3DA5'];
+
 function flowerSVG(colorName, size){
   size = size || 14;
-  const hex = colorToHex(colorName);
-  const isDark = isColorDark(hex);
+  const isMulti = colorName && colorName.toLowerCase().trim() === 'multicolor';
+  const hex = isMulti ? null : colorToHex(colorName);
+  const isDark = isMulti ? false : isColorDark(hex);
   const stroke = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)';
   const r = size / 2;
   const pr = r * 0.38;
@@ -50,7 +53,8 @@ function flowerSVG(colorName, size){
     const cx = (r + Math.cos(a) * pc).toFixed(1);
     const cy = (r + Math.sin(a) * pc).toFixed(1);
     const rot = (a * 180 / Math.PI).toFixed(1);
-    petals += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + pr.toFixed(1) + '" ry="' + (pr * 0.65).toFixed(1) + '" fill="' + hex + '" stroke="' + stroke + '" stroke-width="0.5" transform="rotate(' + rot + ',' + cx + ',' + cy + ')"/>';
+    const fill = isMulti ? RAINBOW_PETALS[i] : hex;
+    petals += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + pr.toFixed(1) + '" ry="' + (pr * 0.65).toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="0.5" transform="rotate(' + rot + ',' + cx + ',' + cy + ')"/>';
   }
   const cr = (r * 0.28).toFixed(1);
   const cc = isDark ? '#E8DCC8' : '#1A1714';

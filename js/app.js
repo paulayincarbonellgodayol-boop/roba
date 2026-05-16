@@ -3,6 +3,14 @@
 // ════════════════════════════════════════
 //  CATEGORY ICONS (placeholder for photos)
 // ════════════════════════════════════════
+// ── Size datalist for forms ──
+async function initSizeDatalist(){
+  const allItems = await dbGetAll('items');
+  const sizes = [...new Set(allItems.map(i=>i.size).filter(Boolean))].sort();
+  const dl = document.getElementById('if-size-list');
+  if(dl) dl.innerHTML = sizes.map(s=>'<option value="'+esc(s)+'">').join('');
+}
+
 // ── Color multi-select for forms ──
 let itemColors=[];
 let colorOptionsCache=[];
@@ -264,31 +272,38 @@ async function openItemModal(id){
   const iMap = {};
   allItems.forEach(it => iMap[it.id] = it);
 
-  // Wear history with companions (PENDENT 10)
-  const wearHistHTML = wears.length > 0 ? (() => {
-    const rows = wears.map(w => {
-      // Find companions on same date (same outfitId if available, else same date)
-      const companions = allWears.filter(ow =>
-        ow.date === w.date &&
-        ow.itemId !== id &&
-        (w.outfitId ? ow.outfitId === w.outfitId : true)
-      ).map(ow => {
-        const it = iMap[ow.itemId];
-        return it ? it.brand + ' ' + it.name : null;
-      }).filter(Boolean);
+  // Wear history — accordion by year, table per year
+  const buildCompanions = w => allWears.filter(ow =>
+    ow.date === w.date && ow.itemId !== id && (w.outfitId ? ow.outfitId === w.outfitId : true)
+  ).map(ow => { const it = iMap[ow.itemId]; return it ? it.brand + ' ' + it.name : null; }).filter(Boolean);
 
-      const companionStr = companions.length > 0
-        ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">amb: ' + companions.slice(0,4).join(', ') + (companions.length>4?' +' + (companions.length-4)+'...':'') + '</div>'
-        : '';
-      return '<div class="wh-chip" data-date="' + w.date + '" style="display:block;border-radius:var(--radius-sm);padding:0.4rem 0.65rem;margin-bottom:4px">'
-        + '<span style="font-weight:500">' + formatDate(w.date) + '</span>'
-        + companionStr
+  const wearHistHTML = wears.length > 0 ? (() => {
+    const byYear = {};
+    wears.forEach(w => { const y = w.date.slice(0,4); (byYear[y] = byYear[y]||[]).push(w); });
+    const yearBlocks = Object.keys(byYear).sort((a,b) => b-a).map(year => {
+      const yw = byYear[year];
+      const isOpen = false;
+      const rows = yw.map(w => {
+        const comp = buildCompanions(w);
+        const compStr = comp.length ? comp.slice(0,3).join(' · ') + (comp.length>3?' +' + (comp.length-3):'') : '—';
+        return '<tr>'
+          + '<td class="wh-date-cell" data-date="' + w.date + '">' + formatDate(w.date) + '</td>'
+          + '<td class="wh-comp-cell">' + esc(compStr) + '</td>'
+          + '<td class="wh-del-cell"><button class="wh-del-btn" data-wid="' + w.id + '" title="Eliminar registre">×</button></td>'
+          + '</tr>';
+      }).join('');
+      return '<div class="wh-year-block">'
+        + '<button class="wh-year-hdr' + (isOpen ? ' open' : '') + '">'
+        + '<span>' + year + '</span>'
+        + '<span class="wh-yr-count">' + yw.length + ' ' + (yw.length === 1 ? 'ús' : 'usos') + '</span>'
+        + '<span class="wh-chevron">' + (isOpen ? '▾' : '▶') + '</span>'
+        + '</button>'
+        + '<table class="wh-table"' + (isOpen ? '' : ' style="display:none"') + '><tbody>' + rows + '</tbody></table>'
         + '</div>';
-    });
-    return '<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border2)">'
-      + '<div style="font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:0.5rem;font-weight:500">Historial d\'usos (' + wears.length + ')</div>'
-      + '<div style="max-height:220px;overflow-y:auto">' + rows.join('') + '</div>'
-      + '</div>';
+    }).join('');
+    return '<div class="wh-section">'
+      + '<div class="wh-section-title">Historial d\'usos (' + wears.length + ')</div>'
+      + yearBlocks + '</div>';
   })() : '';
 
   // Units HTML
@@ -382,8 +397,36 @@ async function openItemModal(id){
   const addUnitBtn = modal.querySelector('[data-addunit]');
   if(addUnitBtn) addUnitBtn.addEventListener('click', () => addUnitToItem(id));
 
+  // Wear history accordion
+  modal.querySelectorAll('.wh-year-hdr').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const isOpen = hdr.classList.contains('open');
+      hdr.classList.toggle('open', !isOpen);
+      hdr.querySelector('.wh-chevron').textContent = isOpen ? '▶' : '▾';
+      hdr.nextElementSibling.style.display = isOpen ? 'none' : '';
+    });
+  });
+
+  // Delete individual wear entry
+  modal.querySelectorAll('.wh-del-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if(!confirm('Eliminar aquest registre d\'ús?')) return;
+      await dbDelete('wears', Number(btn.dataset.wid));
+      const updWears = await dbGetIndex('wears', 'itemId', id);
+      const it = await dbGet('items', id);
+      it.wears = updWears.length;
+      it.cpw = it.totalCost > 0 && it.wears > 0 ? it.totalCost / it.wears : 0;
+      const sorted = [...updWears].sort((a,b) => b.date.localeCompare(a.date));
+      it.lastWorn = sorted.length > 0 ? sorted[0].date : null;
+      await dbPut('items', it);
+      openItemModal(id);
+      renderDashboard();
+    });
+  });
+
   // Wear history date chips -> open day modal
-  modal.querySelectorAll('.wh-chip[data-date]').forEach(el => {
+  modal.querySelectorAll('.wh-date-cell[data-date]').forEach(el => {
     el.addEventListener('click', () => {
       const [y,m] = el.dataset.date.split('-').map(Number);
       calYear = y; calMonth = m-1;
@@ -427,6 +470,7 @@ function openAddItemModal(){
   document.getElementById('item-form-modal').classList.add('open');
   setTimeout(hookCategorySelector, 50);
   initColorSelector([]);
+  initSizeDatalist();
 }
 
 async function openEditItemModal(id){
@@ -445,6 +489,7 @@ async function openEditItemModal(id){
   // Init color selector with existing colors
   const existingColors = item.colors || (item.color ? item.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean) : []);
   initColorSelector(existingColors);
+  initSizeDatalist();
   // Trigger type selector update after category is set
   setTimeout(() => {
     updateTypeSelector();
