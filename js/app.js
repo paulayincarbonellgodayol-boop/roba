@@ -296,7 +296,7 @@ async function openItemModal(id){
         + '<button class="wh-year-hdr' + (isOpen ? ' open' : '') + '">'
         + '<span>' + year + '</span>'
         + '<span class="wh-yr-count">' + yw.length + ' ' + (yw.length === 1 ? 'ús' : 'usos') + '</span>'
-        + '<span class="wh-chevron">' + (isOpen ? '▾' : '▶') + '</span>'
+        + '<span class="wh-chevron">' + (isOpen ? '▾︎' : '▶︎') + '</span>'
         + '</button>'
         + '<table class="wh-table"' + (isOpen ? '' : ' style="display:none"') + '><tbody>' + rows + '</tbody></table>'
         + '</div>';
@@ -402,7 +402,7 @@ async function openItemModal(id){
     hdr.addEventListener('click', () => {
       const isOpen = hdr.classList.contains('open');
       hdr.classList.toggle('open', !isOpen);
-      hdr.querySelector('.wh-chevron').textContent = isOpen ? '▶' : '▾';
+      hdr.querySelector('.wh-chevron').textContent = isOpen ? '▶︎' : '▾︎';
       hdr.nextElementSibling.style.display = isOpen ? 'none' : '';
     });
   });

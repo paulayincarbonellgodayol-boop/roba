@@ -16,6 +16,7 @@ let historyOutfitsCache = [];
 let historyIMap = {};
 let historySort = 'count';
 let historialStackFilters = [];
+let hsfCloseDrop = null;
 let historialModalFilters = new Set();
 let hmBaseChips    = [];
 let hmExtraFilters = [];
@@ -158,7 +159,7 @@ function renderHistoryOutfits(){
 // ── Two-step picker: category → item chips ──
 // containerEl is cleared and filled; onSelect(itemId, catKey, label) called on item click.
 function attachTwoStepPicker(containerEl, byCat, onSelect){
-  const availCats = Object.entries(CAT_LABELS).filter(([cat]) => byCat[cat]?.length);
+  const availCats = Object.keys(byCat).filter(k => byCat[k]?.length).map(k => [k, CAT_LABELS[k] || k]);
   if(!availCats.length){ containerEl.innerHTML = ''; return; }
 
   const catHTML = availCats.map(([cat, label]) =>
@@ -233,7 +234,7 @@ function renderHistorialFilters(){
     (activeHTML ? '<div class="hm-filters-row" style="margin-bottom:0.5rem">' + activeHTML + '</div>' : '')
     + (hasItems && hasByCat
       ? '<div class="hsf-drop-wrap">'
-        + '<button class="hsf-drop-btn" id="hsf-trigger">+ Afegir peça ▾</button>'
+        + '<button class="hsf-drop-btn" id="hsf-trigger">+ Afegir peça ▾︎</button>'
         + '<div class="hsf-drop-panel" id="hsf-panel" style="display:none"></div>'
         + '</div>'
       : (!hasItems ? '<div style="font-size:12px;color:var(--text3)">Cap peça registrada encara.</div>' : ''));
@@ -243,8 +244,7 @@ function renderHistorialFilters(){
   if(trigger && panel){
     attachTwoStepPicker(panel, byCat, (id, cat, label) => {
       historialStackFilters.push({itemId: id, catKey: cat, label});
-      panel.style.display = 'none';
-      trigger.textContent = '+ Afegir peça ▾';
+      if(hsfCloseDrop){ document.removeEventListener('click', hsfCloseDrop); hsfCloseDrop = null; }
       renderHistorialFilters();
       renderHistoryOutfits();
     });
@@ -252,15 +252,18 @@ function renderHistorialFilters(){
       e.stopPropagation();
       const open = panel.style.display !== 'none';
       panel.style.display = open ? 'none' : 'block';
-      trigger.textContent = open ? '+ Afegir peça ▾' : '+ Afegir peça ▴';
+      trigger.textContent = open ? '+ Afegir peça ▾︎' : '+ Afegir peça ▴︎';
     });
-    document.addEventListener('click', function closeDrop(e){
+    if(hsfCloseDrop) document.removeEventListener('click', hsfCloseDrop);
+    hsfCloseDrop = e => {
       if(!wrap.contains(e.target)){
         panel.style.display = 'none';
-        trigger.textContent = '+ Afegir peça ▾';
-        document.removeEventListener('click', closeDrop);
+        trigger.textContent = '+ Afegir peça ▾︎';
+        document.removeEventListener('click', hsfCloseDrop);
+        hsfCloseDrop = null;
       }
-    });
+    };
+    document.addEventListener('click', hsfCloseDrop);
   }
 
   wrap.querySelectorAll('[data-hsfrmidx]').forEach(el => {
@@ -280,89 +283,73 @@ function renderOutfitBuilder(allItems){
 
   container.innerHTML = LOG_CATS.map(cat =>
     '<div class="log-cat-section">'
-    + '<div class="log-cat-header">'
-    + '<span class="log-cat-label">' + cat.label + '</span>'
-    + '<button class="log-add-btn" data-obcat="' + cat.key + '">+ Afegir</button>'
-    + '</div>'
-    + '<div id="obrows-' + cat.key + '"><div style="font-size:12px;color:var(--text3);padding:2px 0 4px">Cap peça</div></div>'
+    + '<div class="log-cat-header"><span class="log-cat-label">' + cat.label + '</span></div>'
+    + '<div id="obrows-' + cat.key + '" class="ob-chips-row"></div>'
+    + '<div id="obpicker-' + cat.key + '"></div>'
     + '</div>'
   ).join('');
 
-  container.querySelectorAll('[data-obcat]').forEach(btn => {
-    btn.addEventListener('click', () => addOutfitBuilderPiece(btn.dataset.obcat, allItems));
-  });
+  LOG_CATS.forEach(cat => renderOutfitBuilderCat(cat.key, allItems));
 }
 
-function addOutfitBuilderPiece(catKey, allItems){
-  outfitBuilderPieces[catKey].push({itemId:null, text:''});
-  renderOutfitBuilderRows(catKey, allItems);
-}
+function renderOutfitBuilderCat(catKey, allItems){
+  const rowsEl   = document.getElementById('obrows-'   + catKey);
+  const pickerEl = document.getElementById('obpicker-' + catKey);
+  if(!rowsEl || !pickerEl) return;
 
-function renderOutfitBuilderRows(catKey, allItems){
-  const container = document.getElementById('obrows-' + catKey);
-  if(!container) return;
   const pieces = outfitBuilderPieces[catKey] || [];
-  if(!pieces.length){
-    container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:2px 0 4px">Cap peça</div>';
-    return;
-  }
-  let html = '';
-  pieces.forEach((p, i) => {
-    html += '<div class="log-piece-row" data-obcat="' + catKey + '" data-obidx="' + i + '">'
-      + '<div class="ac-wrap">'
-      + '<input class="log-piece-input" id="obinput-' + catKey + '-' + i + '" type="text"'
-      + ' placeholder="Busca una peça…" value="' + esc(p.text) + '" autocomplete="off">'
-      + '<div class="ac-drop" id="obacdrop-' + catKey + '-' + i + '"></div>'
-      + '</div>'
-      + '<button class="log-rm-btn" data-obrmcat="' + catKey + '" data-obrmidx="' + i + '">&#215;</button>'
-      + '</div>';
-  });
-  container.innerHTML = html;
-  container.querySelectorAll('[data-obrmcat]').forEach(btn => {
+
+  // Selected piece chips
+  rowsEl.innerHTML = pieces.length
+    ? pieces.map((p, i) =>
+        '<span class="ob-piece-chip">'
+        + esc(p.text)
+        + ' <span class="ob-chip-rm" data-obrmcat="' + catKey + '" data-obrmidx="' + i + '">×</span>'
+        + '</span>'
+      ).join('')
+    : '';
+
+  rowsEl.querySelectorAll('[data-obrmcat]').forEach(btn => {
     btn.addEventListener('click', () => {
       outfitBuilderPieces[btn.dataset.obrmcat].splice(parseInt(btn.dataset.obrmidx), 1);
-      renderOutfitBuilderRows(catKey, allItems);
+      renderOutfitBuilderCat(catKey, allItems);
       checkDuplicateNucleus();
     });
   });
-  container.querySelectorAll('input.log-piece-input').forEach(input => {
-    const row = input.closest('[data-obcat]');
-    const cat = row.dataset.obcat;
-    const idx = parseInt(row.dataset.obidx);
-    input.addEventListener('input', () => { showObDrop(cat, idx, input.value, allItems); checkDuplicateNucleus(); });
-    input.addEventListener('focus', () => showObDrop(cat, idx, input.value, allItems));
-  });
-}
 
-function showObDrop(catKey, idx, val, allItems){
-  const drop = document.getElementById('obacdrop-' + catKey + '-' + idx);
-  if(!drop) return;
-  if(!val.trim()){ drop.style.display='none'; return; }
-  const q = val.toLowerCase();
-  const matches = allItems.filter(it =>
-    it.category === catKey &&
-    (it.brand.toLowerCase().includes(q) || it.name.toLowerCase().includes(q))
-  ).slice(0,7);
-  let html = matches.map(it =>
-    '<div class="ac-item" data-obpick="1" data-obcat="' + catKey + '" data-obidx="' + idx
-    + '" data-obid="' + it.id + '" data-obtext="' + esc(it.brand+' '+it.name) + '">'
-    + '<span class="ac-main">' + esc(it.brand) + ' ' + esc(it.name) + '</span>'
-    + ' <span class="ac-sub">' + esc(it.color) + '</span>'
-    + '</div>'
-  ).join('');
-  drop.innerHTML = html;
-  drop.style.display = html ? 'block' : 'none';
-  drop.querySelectorAll('[data-obpick]').forEach(el => {
-    el.addEventListener('mousedown', e => {
-      e.preventDefault();
-      const cat = el.dataset.obcat;
-      const i   = parseInt(el.dataset.obidx);
-      outfitBuilderPieces[cat][i] = {itemId: el.dataset.obid, text: el.dataset.obtext};
-      renderOutfitBuilderRows(cat, allItems);
-      closeAllDrops();
-      checkDuplicateNucleus();
-    });
+  // Build byType grouping (ordered by TYPES_BY_CAT, then any custom types found)
+  const byType = {};
+  (TYPES_BY_CAT[catKey] || []).forEach(t => { byType[t] = []; });
+  allItems.filter(it => it.category === catKey).forEach(it => {
+    const t = it.type || 'Altres';
+    if(!byType[t]) byType[t] = [];
+    byType[t].push(it);
   });
+  Object.keys(byType).forEach(k => { if(!byType[k].length) delete byType[k]; });
+
+  // Trigger button + inline picker panel
+  pickerEl.innerHTML =
+    '<button class="log-add-btn" id="obtrg-' + catKey + '">+ Afegir peça</button>'
+    + '<div id="obpick-' + catKey + '" style="display:none;margin-top:0.4rem"></div>';
+
+  const triggerBtn = document.getElementById('obtrg-'  + catKey);
+  const pickPanel  = document.getElementById('obpick-' + catKey);
+
+  if(Object.keys(byType).length){
+    triggerBtn.addEventListener('click', () => {
+      const open = pickPanel.style.display !== 'none';
+      pickPanel.style.display = open ? 'none' : 'block';
+      if(!open) attachTwoStepPicker(pickPanel, byType, (id, _cat, label) => {
+        outfitBuilderPieces[catKey].push({itemId: id, text: label});
+        pickPanel.style.display = 'none';
+        renderOutfitBuilderCat(catKey, allItems);
+        checkDuplicateNucleus();
+      });
+    });
+  } else {
+    triggerBtn.disabled = true;
+    triggerBtn.style.opacity = '0.4';
+  }
 }
 
 function checkDuplicateNucleus(){
@@ -378,12 +365,13 @@ function clearOutfitBuilder(){
   LOG_CATS.forEach(c => { outfitBuilderPieces[c.key] = []; });
   const nameInput = document.getElementById('outfit-name-input');
   if(nameInput) nameInput.value = '';
-  const container = document.getElementById('outfit-builder-cats');
-  if(container) LOG_CATS.forEach(cat => {
-    const rows = document.getElementById('obrows-' + cat.key);
-    if(rows) rows.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:2px 0 4px">Cap peça</div>';
-  });
   document.getElementById('outfit-dup-warning').style.display = 'none';
+  LOG_CATS.forEach(cat => {
+    const rowsEl    = document.getElementById('obrows-'  + cat.key);
+    const pickPanel = document.getElementById('obpick-'  + cat.key);
+    if(rowsEl)    rowsEl.innerHTML = '';
+    if(pickPanel){ pickPanel.style.display = 'none'; pickPanel.innerHTML = ''; }
+  });
 }
 
 async function saveOutfit(){
@@ -434,7 +422,7 @@ async function renderOutfitsList(){
       + '<button class="btn btn-primary btn-sm" style="font-size:11px" data-wearoutfit="' + o.id + '">Registrar</button>'
       + '<button class="chip ' + (o.favourite?'accent-on':'') + '" style="font-size:11px;padding:0.3rem 0.6rem" data-favoutfit="' + o.id + '">' + (o.favourite?'★':'☆') + '</button>'
       + '<button class="btn btn-danger btn-sm" style="font-size:11px" data-deloutfit="' + o.id + '">×</button>'
-      + '<span class="saved-outfit-chevron">▶</span>'
+      + '<span class="saved-outfit-chevron">▶︎</span>'
       + '</div>'
       + '</div>'
       + '<div class="saved-outfit-body" style="display:none"></div>'
@@ -448,7 +436,7 @@ async function renderOutfitsList(){
       const body = card.querySelector('.saved-outfit-body');
       const isOpen = card.classList.contains('open');
       card.classList.toggle('open', !isOpen);
-      top.querySelector('.saved-outfit-chevron').textContent = isOpen ? '▶' : '▾';
+      top.querySelector('.saved-outfit-chevron').textContent = isOpen ? '▶︎' : '▾︎';
       body.style.display = isOpen ? 'none' : 'block';
       if(!isOpen && !body.dataset.loaded){
         body.dataset.loaded = '1';
@@ -528,7 +516,7 @@ async function expandOutfitCard(outfitId, bodyEl, allItems){
     return '<div class="wh-year-block">'
       + '<div class="wh-year-hdr" data-opyear="' + year + '">'
       + year + ' <span class="wh-yr-count">' + ys.length + ' ' + (ys.length===1?'cop':'cops') + '</span>'
-      + '<span class="wh-chevron">▶</span>'
+      + '<span class="wh-chevron">▶︎</span>'
       + '</div>'
       + '<div class="op-date-chips-wrap" style="display:none">' + chipsRow + '</div>'
       + '</div>';
@@ -560,7 +548,7 @@ async function expandOutfitCard(outfitId, bodyEl, allItems){
       const chevron = hdr.querySelector('.wh-chevron');
       const isOpen = body.style.display !== 'none';
       body.style.display = isOpen ? 'none' : 'flex';
-      chevron.textContent = isOpen ? '▶' : '▾';
+      chevron.textContent = isOpen ? '▶︎' : '▾︎';
     });
   });
 
@@ -799,13 +787,27 @@ function renderHistorialModal(){
     + '</span>'
   ).join('');
 
-  // Category dropdown — items not already in base or extra
+  // Compute matching outfits first so the add-filter only surfaces co-worn pieces
+  const allActiveIds = new Set([...historialModalFilters, ...hmExtraFilters.map(f => f.itemId)]);
+  hmModalOutfits = historyOutfitsCache.filter(o => {
+    const all = new Set([...o.daltIds, ...o.baixIds, ...o.sencerIds,
+      ...Object.values(o.variants).flatMap(v => v.items)]);
+    return [...allActiveIds].every(id => all.has(id));
+  });
+
+  // Add-filter chips: only pieces from matching outfits, not already active
   const usedIds = new Set([...hmBaseChips.map(c => c.itemId), ...hmExtraFilters.map(c => c.itemId)]);
   const byCat = {};
-  Object.values(historyIMap).forEach(it => {
-    if(usedIds.has(it.id)) return;
-    if(!byCat[it.category]) byCat[it.category] = [];
-    byCat[it.category].push(it);
+  hmModalOutfits.forEach(o => {
+    const pieceIds = [...o.daltIds, ...o.baixIds, ...o.sencerIds,
+      ...Object.values(o.variants).flatMap(v => v.items)];
+    pieceIds.forEach(id => {
+      if(usedIds.has(id)) return;
+      const it = historyIMap[id];
+      if(!it || byCat[it.category]?.some(x => x.id === id)) return;
+      if(!byCat[it.category]) byCat[it.category] = [];
+      byCat[it.category].push(it);
+    });
   });
   filterEl.innerHTML =
     '<div class="hm-filters-row">' + baseHTML + extraHTML + '</div>'
@@ -833,14 +835,6 @@ function renderHistorialModal(){
       renderHistorialModal();
     });
   }
-
-  // Filter outfits (all active IDs must be present — AND logic)
-  const allActiveIds = new Set([...historialModalFilters, ...hmExtraFilters.map(f => f.itemId)]);
-  hmModalOutfits = historyOutfitsCache.filter(o => {
-    const all = new Set([...o.daltIds, ...o.baixIds, ...o.sencerIds,
-      ...Object.values(o.variants).flatMap(v => v.items)]);
-    return [...allActiveIds].every(id => all.has(id));
-  });
 
   listEl.innerHTML = hmModalOutfits.length
     ? '<div style="font-size:12px;color:var(--text3);margin-bottom:0.6rem">' + hmModalOutfits.length + ' outfit' + (hmModalOutfits.length!==1?'s':'') + '</div>'

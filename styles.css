@@ -393,6 +393,12 @@ nav > *{
 .wh-del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;line-height:1;padding:0 0.15rem;opacity:0.4}
 .wh-del-btn:hover{color:var(--danger);opacity:1}
 
+/* ── OUTFIT BUILDER CHIPS ── */
+.ob-chips-row{display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.35rem;min-height:0}
+.ob-piece-chip{display:inline-flex;align-items:center;gap:0.35rem;background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:0.18rem 0.6rem;font-size:12px}
+.ob-chip-rm{cursor:pointer;font-size:13px;line-height:1;opacity:0.5;transition:opacity 0.1s}
+.ob-chip-rm:hover{opacity:1}
+
 /* ── SAVED OUTFIT CARDS ── */
 .saved-outfit-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:0.5rem;overflow:hidden}
 .saved-outfit-top{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.85rem 1rem;cursor:pointer}
