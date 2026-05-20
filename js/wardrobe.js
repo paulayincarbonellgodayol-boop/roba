@@ -28,9 +28,9 @@ let wrdSelectMode = false;
 let wrdSelected = new Set();
 let wrdActiveFilters = {
   cat:'', type:'',
-  seasons:[], formality:[], colors:[], brands:[], sizes:[], status:[],
+  seasons:[], formality:[], colors:[], brands:[], sizes:[], status:[], tags:[],
   priceMin:null, priceMax:null, cpuMin:null, cpuMax:null, needsInfo:false,
-  colorOp:'AND'
+  colorOp:'AND', tagOp:'AND'
 };
 let wrdFilterBarBuilt = false;
 
@@ -138,12 +138,15 @@ function buildFilterBar(allItems){
   const brands = [...new Set(allItems.map(i=>i.brand).filter(Boolean))].sort();
   const sizes  = [...new Set(allItems.map(i=>i.size).filter(Boolean))].sort();
 
+  const tags = [...new Set(allItems.flatMap(i => i.tags || []))].sort();
+
   buildMultiPanel('fp-season',   Object.keys(SEASON_LABELS),  SEASON_LABELS,  'seasons');
   buildMultiPanel('fp-formality',Object.keys(FORMAL_LABELS),  FORMAL_LABELS,  'formality');
   buildMultiPanelWithFlowers('fp-color', colors, 'colors');
   buildMultiPanel('fp-brand',    brands, null, 'brands');
   buildMultiPanel('fp-size',     sizes,  null, 'sizes');
   buildMultiPanel('fp-status',   Object.keys(STATUS_LABELS),  STATUS_LABELS,  'status');
+  buildTagPanel('fp-tag', tags);
   buildSliderPanel('fp-price', allItems, 'price', '€',    1);
   buildSliderPanel('fp-cpu',   allItems, 'cpw',   '€/ús', 0.05);
 
@@ -164,8 +167,8 @@ function buildMultiPanelWithFlowers(panelId, values, filterKey){
   const panel=document.getElementById(panelId);
   if(!panel||!values.length){if(panel)panel.innerHTML='<div style="padding:0.5rem 0.85rem;font-size:12px;color:var(--text3)">Cap valor</div>';return;}
   panel.innerHTML='<div style="padding:0.4rem 0.5rem;border-bottom:1px solid var(--border2);display:flex;gap:0.4rem">'
-    +'<button class="chip" style="font-size:11px;padding:0.2rem 0.6rem" data-colorop="OR">OR</button>'
-    +'<button class="chip on" style="font-size:11px;padding:0.2rem 0.6rem" data-colorop="AND">AND</button>'
+    +'<button class="chip" style="font-size:11px;padding:0.2rem 0.6rem" data-colorop="OR">ALGUN</button>'
+    +'<button class="chip on" style="font-size:11px;padding:0.2rem 0.6rem" data-colorop="AND">TOTS</button>'
     +'</div>'
     +values.map(v=>
       '<label class="fbar-option" style="gap:8px"><input type="checkbox" value="'+v+'" data-fkey="'+filterKey+'">'+flowerSVG(v,14)+' '+esc(v)+'</label>'
@@ -187,6 +190,32 @@ function buildMultiPanelWithFlowers(panelId, values, filterKey){
   });
 }
 
+function buildTagPanel(panelId, tags){
+  const panel = document.getElementById(panelId);
+  if(!panel){ return; }
+  if(!tags.length){ panel.innerHTML='<div style="padding:0.5rem 0.85rem;font-size:12px;color:var(--text3)">Cap etiqueta encara</div>'; return; }
+  panel.innerHTML='<div style="padding:0.4rem 0.5rem;border-bottom:1px solid var(--border2);display:flex;gap:0.4rem">'
+    +'<button class="chip" style="font-size:11px;padding:0.2rem 0.6rem" data-tagop="OR">ALGUN</button>'
+    +'<button class="chip on" style="font-size:11px;padding:0.2rem 0.6rem" data-tagop="AND">TOTS</button>'
+    +'</div>'
+    +tags.map(t=>'<label class="fbar-option"><input type="checkbox" value="'+esc(t)+'" data-fkey="tags">'+esc(t)+'</label>').join('');
+  panel.querySelectorAll('[data-tagop]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      panel.querySelectorAll('[data-tagop]').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      wrdActiveFilters.tagOp=btn.dataset.tagop;
+      wrdPage=1; renderWardrobe();
+    });
+  });
+  panel.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      if(cb.checked){ if(!wrdActiveFilters.tags.includes(cb.value)) wrdActiveFilters.tags.push(cb.value); }
+      else wrdActiveFilters.tags = wrdActiveFilters.tags.filter(x=>x!==cb.value);
+      updateBadge('tags'); wrdPage=1; renderWardrobe();
+    });
+  });
+}
+
 function buildMultiPanel(panelId, values, displayMap, filterKey){
   const panel = document.getElementById(panelId);
   if(!panel || !values.length){ if(panel) panel.innerHTML='<div style="padding:0.5rem 0.85rem;font-size:12px;color:var(--text3)">Cap valor</div>'; return; }
@@ -204,7 +233,7 @@ function buildMultiPanel(panelId, values, displayMap, filterKey){
 }
 
 function updateBadge(filterKey){
-  const fbMap = {seasons:'season',formality:'formality',colors:'color',brands:'brand',sizes:'size',status:'status'};
+  const fbMap = {seasons:'season',formality:'formality',colors:'color',brands:'brand',sizes:'size',status:'status',tags:'tag'};
   const fbKey = fbMap[filterKey] || filterKey;
   const badge = document.getElementById('fb-badge-' + fbKey);
   if(!badge) return;
@@ -218,7 +247,7 @@ function updateBadge(filterKey){
 function updateClearBtn(){
   const pmEl = document.getElementById('fp-price-min'), pxEl = document.getElementById('fp-price-max');
   const cmEl = document.getElementById('fp-cpu-min'),   cxEl = document.getElementById('fp-cpu-max');
-  const has = ['seasons','formality','colors','brands','sizes','status'].some(k=>wrdActiveFilters[k].length>0)
+  const has = ['seasons','formality','colors','brands','sizes','status','tags'].some(k=>wrdActiveFilters[k].length>0)
     || (pmEl && +pmEl.value > +pmEl.min) || (pxEl && +pxEl.value < +pxEl.max)
     || (cmEl && +cmEl.value > +cmEl.min) || (cxEl && +cxEl.value < +cxEl.max);
   const btn = document.getElementById('fbar-clear');
@@ -226,7 +255,7 @@ function updateClearBtn(){
 }
 
 function clearAllFilters(){
-  ['seasons','formality','colors','brands','sizes','status'].forEach(k=>{ wrdActiveFilters[k]=[]; }); wrdActiveFilters.colorOp='AND';
+  ['seasons','formality','colors','brands','sizes','status','tags'].forEach(k=>{ wrdActiveFilters[k]=[]; }); wrdActiveFilters.colorOp='AND'; wrdActiveFilters.tagOp='AND';
   document.querySelectorAll('.fbar-panel input[type=checkbox]').forEach(cb=>cb.checked=false);
   document.querySelectorAll('.fbar-badge').forEach(b=>{b.textContent='';b.classList.remove('show');});
   document.querySelectorAll('.fbar-btn').forEach(b=>b.classList.remove('has-filter'));
@@ -289,6 +318,11 @@ async function renderWardrobe(){
       return wrdActiveFilters.colors.every(c=>cols.includes(c.toLowerCase()));
     return wrdActiveFilters.colors.some(c=>cols.includes(c.toLowerCase()));
   });
+  if(wrdActiveFilters.tags.length) items = items.filter(i=>{
+    const t = i.tags || [];
+    if(wrdActiveFilters.tagOp==='AND') return wrdActiveFilters.tags.every(tag=>t.includes(tag));
+    return wrdActiveFilters.tags.some(tag=>t.includes(tag));
+  });
   if(wrdActiveFilters.brands.length) items = items.filter(i=>wrdActiveFilters.brands.includes(i.brand));
   if(wrdActiveFilters.sizes.length)  items = items.filter(i=>wrdActiveFilters.sizes.includes(i.size));
   if(wrdActiveFilters.status.length) items = items.filter(i=>wrdActiveFilters.status.some(s=>{
@@ -349,6 +383,7 @@ async function renderWardrobe(){
         +'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:0.4rem">'+cols.map(c=>colorPill(c)).join('')+'</div>';
     })()
       +'<div class="ic-pills"><span class="pill pill-cat">'+(CAT_LABELS[item.category]||item.category)+'</span>'+(item.type?'<span class="pill pill-type">'+item.type+'</span>':'')+seasons+formalPills+needsPill+retiredPill+'</div>'
+      +((item.tags&&item.tags.length)?'<div class="ic-tags">'+item.tags.map(t=>'<span class="pill pill-tag">'+esc(t)+'</span>').join('')+'</div>':'')
       +'<div class="ic-stats"><div class="ic-stat"><div class="ic-stat-val">'+item.wears+'</div><div class="ic-stat-lbl">Usos</div></div><div class="ic-stat"><div class="ic-stat-val">'+(item.totalCost>0?item.totalCost.toFixed(0)+'€':'—')+'</div><div class="ic-stat-lbl">Cost total</div></div><div class="ic-stat"><div class="ic-stat-val">'+cpwStr+'</div><div class="ic-stat-lbl">CPU</div></div></div>'
       +'</div>';
   }).join('');

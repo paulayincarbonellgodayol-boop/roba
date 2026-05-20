@@ -11,6 +11,45 @@ async function initSizeDatalist(){
   if(dl) dl.innerHTML = sizes.map(s=>'<option value="'+esc(s)+'">').join('');
 }
 
+// ── Tag input for forms ──
+let itemTags = [];
+
+function initTagInput(existingTags){
+  itemTags = existingTags ? [...existingTags] : [];
+  const wrap  = document.getElementById('if-tags-wrap');
+  const pills = document.getElementById('if-tags-pills');
+  const input = document.getElementById('if-tags-input');
+  if(!wrap || !pills || !input) return;
+
+  function renderPills(){
+    pills.innerHTML = itemTags.map((t, i) =>
+      '<span class="if-tag-pill">' + esc(t)
+      + '<span class="if-tag-rm" data-ti="' + i + '">×</span></span>'
+    ).join('');
+    pills.querySelectorAll('[data-ti]').forEach(rm => {
+      rm.addEventListener('click', () => { itemTags.splice(parseInt(rm.dataset.ti), 1); renderPills(); });
+    });
+  }
+
+  function addTag(raw){
+    const tag = raw.trim().toLowerCase().replace(/,+$/, '');
+    if(tag && !itemTags.includes(tag)){ itemTags.push(tag); renderPills(); }
+    input.value = '';
+  }
+
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ','){
+      e.preventDefault();
+      addTag(input.value);
+    } else if(e.key === 'Backspace' && !input.value && itemTags.length){
+      itemTags.pop(); renderPills();
+    }
+  });
+  input.addEventListener('blur', () => { if(input.value.trim()) addTag(input.value); });
+
+  renderPills();
+}
+
 // ── Color multi-select for forms ──
 let itemColors=[];
 let colorOptionsCache=[];
@@ -471,6 +510,7 @@ function openAddItemModal(){
   setTimeout(hookCategorySelector, 50);
   initColorSelector([]);
   initSizeDatalist();
+  initTagInput([]);
 }
 
 async function openEditItemModal(id){
@@ -490,6 +530,7 @@ async function openEditItemModal(id){
   const existingColors = item.colors || (item.color ? item.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean) : []);
   initColorSelector(existingColors);
   initSizeDatalist();
+  initTagInput(item.tags || []);
   // Trigger type selector update after category is set
   setTimeout(() => {
     updateTypeSelector();
@@ -588,6 +629,7 @@ async function submitItemForm(e){
   const notes    = document.getElementById('if-notes').value.trim();
   const seasons  = getMultiSelectValues('if-seasons');
   const formality= getMultiSelectValues('if-formality');
+  const tags     = [...itemTags];
 
   // Units can all be retired — piece stays as archived in wardrobe
 
@@ -601,7 +643,7 @@ async function submitItemForm(e){
     const wears = existing.wears||0;
     const cpw   = wears>0 ? totalCost/wears : totalCost;
     const updated = {...existing, brand, name, color, colors: colors_arr, type, category, size, price, notes,
-      seasons, formality, units:formUnits, quantity:activeUnits, totalCost, cpw,
+      seasons, formality, tags, units:formUnits, quantity:activeUnits, totalCost, cpw,
       purchaseYear: formUnits[0]?.purchaseDate?.slice(0,4)||existing.purchaseYear||''};
     await dbPut('items', updated);
     toast('Peça actualitzada ✓');
@@ -610,7 +652,7 @@ async function submitItemForm(e){
     const id = 'item_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     const item = {
       id, brand, name, color, type, category, size, price, notes,
-      seasons, formality, units:formUnits,
+      seasons, formality, tags, units:formUnits,
       quantity:activeUnits, totalCost, cpw:totalCost,
       wears:0, lastWorn:null,
       images:[], favourite:false, needsInfo:false, seeded:false,

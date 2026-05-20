@@ -845,7 +845,7 @@ function renderHistorialModal(){
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const o = hmModalOutfits[parseInt(btn.dataset.hmsave)];
-      showHmSaveForm(btn, [...o.daltIds, ...o.baixIds, ...o.sencerIds], o.count, o.lastWorn);
+      showHmSaveForm([...o.daltIds, ...o.baixIds, ...o.sencerIds], o.count, o.lastWorn);
     });
   });
   listEl.querySelectorAll('[data-hmvsave]').forEach(btn => {
@@ -854,50 +854,47 @@ function renderHistorialModal(){
       const [oi, vi] = btn.dataset.hmvsave.split('-').map(Number);
       const o = hmModalOutfits[oi];
       const v = Object.values(o.variants).sort((a,b) => b.count - a.count)[vi];
-      showHmSaveForm(btn, v.items, v.count, v.dates[v.dates.length-1]);
+      showHmSaveForm(v.items, v.count, v.dates[v.dates.length-1]);
     });
   });
 }
 
-function showHmSaveForm(triggerBtn, itemIds, wears, lastWorn){
-  // Remove any other open save form
-  document.querySelectorAll('.hm-save-inline').forEach(f => f.remove());
-  document.querySelectorAll('.hm-save-trigger-hidden').forEach(b => { b.style.display = ''; b.classList.remove('hm-save-trigger-hidden'); });
+function showHmSaveForm(itemIds, wears, lastWorn){
+  document.querySelectorAll('.hm-save-dialog').forEach(d => d.remove());
 
   const autoName = itemIds.map(id => {
     const it = historyIMap[id];
     return it ? it.brand + ' ' + it.name : id;
   }).join(' + ');
 
-  const form = document.createElement('div');
-  form.className = 'hm-save-inline';
-  form.innerHTML =
-    '<input class="form-input hm-si-input" type="text" value="' + esc(autoName) + '" placeholder="Nom del conjunt…" style="font-size:12px;padding:0.25rem 0.5rem;width:100%;box-sizing:border-box;margin-bottom:0.3rem">'
-    + '<div style="display:flex;gap:0.3rem;flex-wrap:wrap">'
-    + '<button class="btn btn-secondary btn-sm" style="font-size:10px" data-hmsipieces="1">Peces com a nom</button>'
-    + '<button class="btn btn-primary btn-sm" style="font-size:10px" data-hmsisave="1">Desar</button>'
-    + '<button class="btn btn-secondary btn-sm" style="font-size:10px" data-hmsicancl="1">×</button>'
+  const overlay = document.createElement('div');
+  overlay.className = 'hm-save-dialog';
+  overlay.innerHTML =
+    '<div class="hm-save-dialog-box">'
+    + '<div style="font-size:13px;font-weight:500;margin-bottom:0.75rem">Guarda l\'outfit</div>'
+    + '<input class="form-input hm-si-input" type="text" value="' + esc(autoName) + '" placeholder="Nom del conjunt…" style="margin-bottom:0.4rem">'
+    + '<button class="hm-si-autoname" style="font-size:11px;background:none;border:none;color:var(--text3);cursor:pointer;padding:0;text-decoration:underline;display:block;margin-bottom:0.85rem">Usar nom de les peces</button>'
+    + '<div style="display:flex;gap:0.5rem;justify-content:flex-end">'
+    + '<button class="btn btn-secondary" data-hmsicancl="1">Cancel·lar</button>'
+    + '<button class="btn btn-primary" data-hmsisave="1">Desar</button>'
+    + '</div>'
     + '</div>';
 
-  triggerBtn.classList.add('hm-save-trigger-hidden');
-  triggerBtn.style.display = 'none';
-  triggerBtn.insertAdjacentElement('afterend', form);
-  form.querySelector('.hm-si-input').focus();
-  form.querySelector('.hm-si-input').select();
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector('.hm-si-input');
+  input.focus(); input.select();
 
-  form.querySelector('[data-hmsipieces]').addEventListener('click', () => {
-    form.querySelector('.hm-si-input').value = autoName;
-  });
-  form.querySelector('[data-hmsisave]').addEventListener('click', async () => {
-    const name = form.querySelector('.hm-si-input').value.trim() || autoName;
-    form.remove();
-    triggerBtn.style.display = ''; triggerBtn.classList.remove('hm-save-trigger-hidden');
+  const close = () => overlay.remove();
+
+  overlay.querySelector('.hm-si-autoname').addEventListener('click', () => { input.value = autoName; input.focus(); });
+  overlay.querySelector('[data-hmsisave]').addEventListener('click', async () => {
+    const name = input.value.trim() || autoName;
+    close();
     await saveHistorialOutfit(name, itemIds, wears, lastWorn);
   });
-  form.querySelector('[data-hmsicancl]').addEventListener('click', () => {
-    form.remove();
-    triggerBtn.style.display = ''; triggerBtn.classList.remove('hm-save-trigger-hidden');
-  });
+  overlay.querySelector('[data-hmsicancl]').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') overlay.querySelector('[data-hmsisave]').click(); if(e.key === 'Escape') close(); });
 }
 
 function renderHmOutfitCard(o, oi){

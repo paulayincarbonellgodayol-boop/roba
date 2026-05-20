@@ -132,6 +132,14 @@ nav > *{
 .pill-color{background:var(--bg2);color:var(--text2)}
 .pill-warn{background:#FEF3E2;color:#7A5019}
 .pill-formal{background:#E8F3E8;color:#2A5A2A}
+.pill-tag{background:#FFF3E0;color:#7A4500;font-weight:400}
+.ic-tags{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.3rem;margin-bottom:0.5rem}
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);min-height:42px;cursor:text}
+.tag-input-wrap:focus-within{border-color:var(--text3)}
+.tag-input-field{border:none;outline:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);flex:1;min-width:120px}
+.if-tag-pill{display:inline-flex;align-items:center;gap:0.3rem;background:#FFF3E0;color:#7A4500;border-radius:100px;padding:0.15rem 0.55rem;font-size:12px;font-weight:500}
+.if-tag-rm{cursor:pointer;font-size:13px;opacity:0.6;line-height:1}
+.if-tag-rm:hover{opacity:1}
 .ic-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;padding-top:0.75rem;border-top:1px solid var(--border2)}
 .ic-stat{text-align:center}
 .ic-stat-val{font-size:16px;font-weight:500;color:var(--text);font-feature-settings:'tnum'}
@@ -314,7 +322,7 @@ nav > *{
   .wardrobe-grid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:620px){
-  #view-wardrobe .toolbar{grid-template-columns:auto 1fr}
+  #view-wardrobe .toolbar{display:grid;grid-template-columns:auto 1fr}
   #view-wardrobe .toolbar .btn{grid-column:1;grid-row:1}
   #view-wardrobe .toolbar .sel{grid-column:2;grid-row:1;width:100%}
   #view-wardrobe .toolbar .search-box{grid-column:1/-1;grid-row:2;width:100%}
@@ -421,7 +429,8 @@ nav > *{
 .hm-chip-cat{font-size:10px;opacity:0.55;letter-spacing:0.04em}
 .hm-chip-rm{cursor:pointer;font-size:14px;line-height:1;opacity:0.6}
 .hm-chip-rm:hover{opacity:1}
-.hm-save-inline{margin-top:0.4rem;padding:0.5rem;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
+.hm-save-dialog{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:600;display:flex;align-items:center;justify-content:center;padding:1rem}
+.hm-save-dialog-box{background:var(--bg);border-radius:var(--radius);padding:1.25rem 1.5rem;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.18)}
 .hsf-drop-wrap{position:relative;display:inline-block}
 .hsf-drop-btn{font-size:12px;padding:0.25rem 0.65rem;border:1px solid var(--border);border-radius:100px;background:var(--bg);color:var(--text2);cursor:pointer}
 .hsf-drop-btn:hover{border-color:var(--text3);color:var(--text)}
@@ -550,3 +559,10 @@ nav > *{
 .ocasio-card:hover .ocasio-del{opacity:1}
 .ocasio-del:hover{color:var(--danger)}
 .ocasio-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:0.5rem;flex-shrink:0}
+.oc-pinned-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem 0.9rem;position:relative;overflow:hidden;cursor:pointer}
+.oc-pin-rm{position:absolute;top:0.45rem;right:0.6rem;background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;line-height:1;opacity:0;transition:opacity 0.15s;padding:0}
+.oc-pinned-card:hover .oc-pin-rm{opacity:1}
+.oc-pin-rm:hover{color:var(--danger)}
+.oc-pick-row{padding:0.55rem 0.6rem;border-radius:var(--radius-sm);cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--border2)}
+.oc-pick-row:last-child{border-bottom:none}
+.oc-pick-row:hover{background:var(--bg3)}

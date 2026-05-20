@@ -104,6 +104,7 @@
     <div class="fbar-item"><button class="fbar-btn" data-fb="brand">Marca <span class="fbar-badge" id="fb-badge-brand"></span>▾</button><div class="fbar-panel" id="fp-brand"></div></div>
     <div class="fbar-item"><button class="fbar-btn" data-fb="size">Talla <span class="fbar-badge" id="fb-badge-size"></span>▾</button><div class="fbar-panel" id="fp-size"></div></div>
     <div class="fbar-item"><button class="fbar-btn" data-fb="status">Estat <span class="fbar-badge" id="fb-badge-status"></span>▾</button><div class="fbar-panel" id="fp-status"></div></div>
+    <div class="fbar-item"><button class="fbar-btn" data-fb="tag">Etiquetes <span class="fbar-badge" id="fb-badge-tag"></span>▾</button><div class="fbar-panel" id="fp-tag"></div></div>
     <div class="fbar-item"><button class="fbar-btn" data-fb="price">Preu <span class="fbar-badge" id="fb-badge-price"></span>▾</button>
       <div class="fbar-panel" id="fp-price"></div>
     </div>
@@ -231,11 +232,18 @@
 
   <!-- Detail panel (hidden by default) -->
   <div id="ocasions-detail" style="display:none;margin-bottom:1.5rem">
-    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
       <button class="chip" onclick="closeOcasioDetail()">← Totes les ocasions</button>
       <h2 class="page-title" id="ocasions-detail-title" style="font-size:1.4rem;margin:0"></h2>
-      <span id="ocasions-detail-count" style="font-size:13px;color:var(--text3)"></span>
+      <span style="flex:1"></span>
+      <button class="btn btn-primary btn-sm" id="oc-add-btn">+ Afegir outfit</button>
     </div>
+    <!-- Outfit picker -->
+    <div id="oc-picker" style="display:none;margin-bottom:1.25rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem"></div>
+    <!-- Pinned outfits -->
+    <div id="oc-pinned-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem;margin-bottom:1.25rem"></div>
+    <!-- Wear-based records -->
+    <div id="oc-wear-title" style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);font-weight:500;margin-bottom:0.5rem;display:none"></div>
     <div class="wardrobe-grid" id="ocasions-outfits-grid"></div>
   </div>
 
@@ -426,6 +434,13 @@
           <input class="form-input" id="if-price" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal" onkeypress="return event.charCode>=48&&event.charCode<=57||event.charCode===46">
         </div>
         <div class="form-group">
+          <label class="form-label">Etiquetes</label>
+          <div class="tag-input-wrap" id="if-tags-wrap">
+            <div id="if-tags-pills" style="display:contents"></div>
+            <input class="tag-input-field" id="if-tags-input" type="text" placeholder="Escriu i prem Enter…" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group full">
           <label class="form-label">Notes</label>
           <input class="form-input" id="if-notes" type="text" placeholder="Qualsevol observació…">
         </div>

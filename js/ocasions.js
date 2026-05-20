@@ -105,14 +105,27 @@ function renderOcasionsGrid(allWears){
 }
 
 async function openOcasioDetail(ocasioName, allWears){
+  const oc = ocasionsList.find(o => o.name === ocasioName);
+  if(!oc) return;
+  if(!oc.outfits) oc.outfits = [];
+
   document.getElementById('ocasions-main').style.display = 'none';
   document.getElementById('ocasions-detail').style.display = 'block';
   document.getElementById('ocasions-detail-title').textContent = ocasioName;
+  document.getElementById('oc-picker').style.display = 'none';
 
+  const allItems = await dbGetAll('items');
+  const iMap = {};
+  allItems.forEach(it => iMap[it.id] = it);
+
+  await renderPinnedOutfits(oc, iMap);
+
+  // Wear-based records
   const matching = allWears.filter(w => w.ocasions && w.ocasions.includes(ocasioName));
-  document.getElementById('ocasions-detail-count').textContent = matching.length + ' registre' + (matching.length!==1?'s':'');
+  const wearTitle = document.getElementById('oc-wear-title');
+  wearTitle.style.display = matching.length ? 'block' : 'none';
+  wearTitle.textContent = 'Registres d\'\u00fas (' + matching.length + ')';
 
-  // Group by outfitId
   const groups = {};
   matching.forEach(w => {
     const gid = w.outfitId || ('leg-'+w.date);
@@ -120,40 +133,200 @@ async function openOcasioDetail(ocasioName, allWears){
     if(w.itemId) groups[gid].items.push(w.itemId);
   });
 
-  const allItems = await dbGetAll('items');
-  const iMap = {};
-  allItems.forEach(it => iMap[it.id]=it);
-
   const grid = document.getElementById('ocasions-outfits-grid');
   const sorted = Object.values(groups).sort((a,b)=>b.date.localeCompare(a.date));
-
-  if(!sorted.length){
-    grid.innerHTML = '<div class="empty"><div class="empty-title">Cap outfit registrat per aquesta ocasi\u00f3</div></div>';
-    return;
+  if(!sorted.length){ grid.innerHTML = ''; }
+  else {
+    grid.innerHTML = sorted.map(g => {
+      const cols = Array.isArray(g.items) ? g.items : [];
+      const firstItem = iMap[cols[0]];
+      const iconColors = firstItem && Array.isArray(firstItem.colors) && firstItem.colors.length ? firstItem.colors : [];
+      const iconHTML = firstItem ? catIconSVG(firstItem.category, iconColors, 40) : '';
+      const names = cols.map(id=>iMap[id]?iMap[id].brand+' '+iMap[id].name:'?').join(' \u00b7 ');
+      return '<div class="item-card" style="cursor:pointer" data-gdate="' + g.date + '">'
+        + '<div class="ic-photo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3)">' + iconHTML + '</div>'
+        + '<div class="ic-brand">' + formatDate(g.date) + (g.label?' \u00b7 '+g.label:'') + '</div>'
+        + '<div class="ic-name" style="font-size:13px">' + (names.length > 60 ? names.slice(0,57)+'\u2026' : names) + '</div>'
+        + '</div>';
+    }).join('');
+    grid.querySelectorAll('[data-gdate]').forEach(card => {
+      card.addEventListener('click', () => {
+        const d = card.dataset.gdate;
+        const [y,m] = d.split('-').map(Number);
+        calYear=y; calMonth=m-1;
+        showView('calendar', document.querySelector('.nav-btn[data-view="calendar"]'));
+        setTimeout(()=>openDayModal(d), 300);
+      });
+    });
   }
 
-  grid.innerHTML = sorted.map(g => {
-    const cols = Array.isArray(g.items) ? g.items : [];
-    const cats = [...new Set(cols.map(id=>iMap[id]?.category).filter(Boolean))];
-    // Icon placeholder
-    const firstItem = iMap[cols[0]];
-    const iconColors = firstItem && Array.isArray(firstItem.colors) && firstItem.colors.length ? firstItem.colors : [];
-    const iconHTML = firstItem ? catIconSVG(firstItem.category, iconColors, 40) : '';
-    const names = cols.map(id=>iMap[id]?iMap[id].brand+' '+iMap[id].name:'?').join(' \u00b7 ');
-    return '<div class="item-card" style="cursor:pointer" data-gdate="' + g.date + '">'
-      + '<div class="ic-photo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3)">' + iconHTML + '</div>'
-      + '<div class="ic-brand">' + formatDate(g.date) + (g.label?' \u00b7 '+g.label:'') + '</div>'
-      + '<div class="ic-name" style="font-size:13px">' + (names.length > 60 ? names.slice(0,57)+'\u2026' : names) + '</div>'
+  document.getElementById('oc-add-btn').onclick = () => showAddOutfitPicker(oc, iMap, allWears);
+}
+
+async function renderPinnedOutfits(oc, iMap){
+  const grid = document.getElementById('oc-pinned-grid');
+  if(!grid) return;
+  if(!oc.outfits || !oc.outfits.length){ grid.innerHTML = ''; return; }
+
+  const savedOutfits = await dbGetAll('outfits');
+  const savedMap = {};
+  savedOutfits.forEach(o => savedMap[o.id] = o);
+
+  grid.innerHTML = oc.outfits.map((ref, i) => {
+    let title = '', sub = '';
+    if(ref.type === 'saved'){
+      const o = savedMap[ref.outfitId];
+      title = o ? esc(o.name) : '<em style="color:var(--text3)">Outfit eliminat</em>';
+      sub = o ? (o.pieces||[]).map(p => iMap[p.itemId] ? iMap[p.itemId].brand+' '+iMap[p.itemId].name : p.text).join(' \u00b7 ') : '';
+    } else {
+      title = esc(ref.label);
+      sub = ref.count + ' cop' + (ref.count!==1?'s':'') + ' \u00b7 ' + (ref.lastWorn ? formatDate(ref.lastWorn) : '\u2014');
+    }
+    const badge = ref.type === 'saved'
+      ? '<span style="font-size:10px;background:var(--accent);color:#fff;border-radius:100px;padding:0.1rem 0.5rem;margin-left:0.4rem">Guardat</span>'
+      : '<span style="font-size:10px;background:var(--bg3);color:var(--text2);border-radius:100px;padding:0.1rem 0.5rem;margin-left:0.4rem">Historial</span>';
+    return '<div class="oc-pinned-card" data-pidx="' + i + '">'
+      + '<button class="oc-pin-rm" data-prmidx="' + i + '" title="Treure">\u00d7</button>'
+      + '<div style="font-size:13px;font-weight:500;margin-bottom:0.2rem">' + title + badge + '</div>'
+      + '<div style="font-size:12px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(sub) + '</div>'
       + '</div>';
   }).join('');
 
-  grid.querySelectorAll('[data-gdate]').forEach(card => {
+  grid.querySelectorAll('[data-prmidx]').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      oc.outfits.splice(parseInt(btn.dataset.prmidx), 1);
+      await saveOcasions();
+      renderPinnedOutfits(oc, iMap);
+    });
+  });
+
+  grid.querySelectorAll('.oc-pinned-card[data-pidx]').forEach(card => {
     card.addEventListener('click', () => {
-      const d = card.dataset.gdate;
-      const [y,m] = d.split('-').map(Number);
-      calYear=y; calMonth=m-1;
-      showView('calendar', document.querySelector('.nav-btn[data-view="calendar"]'));
-      setTimeout(()=>openDayModal(d), 300);
+      showPinnedOutfitDetail(oc.outfits[parseInt(card.dataset.pidx)], iMap);
+    });
+  });
+}
+
+async function showPinnedOutfitDetail(ref, iMap){
+  document.querySelector('.oc-outfit-detail-dialog')?.remove();
+  let title = '', sub = '', piecesHTML = '';
+
+  if(ref.type === 'saved'){
+    const o = await dbGet('outfits', ref.outfitId);
+    if(!o) return;
+    title = esc(o.name);
+    sub = (o.wears||0) + ' cop' + ((o.wears||0)!==1?'s':'') + (o.lastWorn ? ' \u00b7 ' + formatDate(o.lastWorn) : '');
+    piecesHTML = (o.pieces||[]).map(p => {
+      const it = iMap[p.itemId];
+      return '<div style="font-size:13px;padding:0.25rem 0;border-bottom:1px solid var(--border2)">' + esc(it ? it.brand+' '+it.name : (p.text||'\u2014')) + '</div>';
+    }).join('');
+  } else {
+    title = esc(ref.label);
+    sub = ref.count + ' cop' + (ref.count!==1?'s':'') + (ref.lastWorn ? ' \u00b7 ' + formatDate(ref.lastWorn) : '');
+    const ids = [];
+    const nk = ref.nucleusKey || '';
+    if(nk.startsWith('S:')){
+      ids.push(...nk.slice(2).split('|').filter(Boolean));
+    } else {
+      const dPart = nk.match(/D:([^+]*)/)?.[1] || '';
+      const bPart = nk.match(/\+B:(.*)/)?.[1] || '';
+      if(dPart) ids.push(...dPart.split('|').filter(Boolean));
+      if(bPart) ids.push(...bPart.split('|').filter(Boolean));
+    }
+    piecesHTML = ids.map(id => {
+      const it = iMap[id];
+      return '<div style="font-size:13px;padding:0.25rem 0;border-bottom:1px solid var(--border2)">' + (it ? esc(it.brand+' '+it.name) : id) + '</div>';
+    }).join('');
+  }
+
+  const dlg = document.createElement('div');
+  dlg.className = 'hm-save-dialog oc-outfit-detail-dialog';
+  dlg.innerHTML = '<div class="hm-save-dialog-box">'
+    + '<div style="font-size:15px;font-weight:600;margin-bottom:0.2rem">' + title + '</div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-bottom:0.75rem">' + sub + '</div>'
+    + piecesHTML
+    + '<div style="margin-top:1rem;display:flex;justify-content:flex-end">'
+    + '<button class="btn btn-sm" style="background:var(--bg3)">Tancar</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(dlg);
+
+  const close = () => dlg.remove();
+  dlg.querySelector('button').addEventListener('click', close);
+  dlg.addEventListener('click', e => { if(e.target === dlg) close(); });
+  document.addEventListener('keydown', function onEsc(e){ if(e.key==='Escape'){ close(); document.removeEventListener('keydown', onEsc); } });
+}
+
+async function showAddOutfitPicker(oc, iMap, allWears){
+  const picker = document.getElementById('oc-picker');
+  if(picker.style.display !== 'none'){ picker.style.display = 'none'; return; }
+
+  const pinnedIds = new Set(oc.outfits.filter(r=>r.type==='saved').map(r=>r.outfitId));
+  const pinnedKeys = new Set(oc.outfits.filter(r=>r.type==='historial').map(r=>r.nucleusKey));
+
+  // Saved outfits section
+  const savedOutfits = await dbGetAll('outfits');
+  const savedHTML = savedOutfits.length
+    ? savedOutfits.map((o, i) => {
+        if(pinnedIds.has(o.id)) return '';
+        const sub = (o.pieces||[]).map(p => iMap[p.itemId] ? iMap[p.itemId].name : p.text).join(' \u00b7 ');
+        return '<div class="oc-pick-row" data-picktype="saved" data-pickidx="' + i + '">'
+          + '<div style="font-size:13px;font-weight:500">' + esc(o.name) + '</div>'
+          + '<div style="font-size:12px;color:var(--text3)">' + esc(sub.slice(0,60)) + '</div>'
+          + '</div>';
+      }).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:0.4rem 0">Cap outfit guardat encara.</div>';
+
+  // Historial section
+  const histOutfits = buildHistoryOutfits(allWears, iMap);
+  const nucleusName = o => {
+    const n = id => { const it = iMap[id]; return it ? it.brand+' '+it.name : id; };
+    return o.sencerIds.length ? o.sencerIds.map(n).join(' + ')
+      : [o.daltIds.map(n).join(' + '), o.baixIds.map(n).join(' + ')].filter(Boolean).join(' \u00b7 ');
+  };
+  const histHTML = histOutfits.length
+    ? histOutfits.map((o, i) => {
+        if(pinnedKeys.has(o.nucleusKey)) return '';
+        const label = nucleusName(o);
+        return '<div class="oc-pick-row" data-picktype="historial" data-pickidx="' + i + '">'
+          + '<div style="font-size:13px;font-weight:500">' + esc(label) + '</div>'
+          + '<div style="font-size:12px;color:var(--text3)">' + o.count + ' cop' + (o.count!==1?'s':'') + ' \u00b7 ' + (o.lastWorn ? formatDate(o.lastWorn) : '\u2014') + '</div>'
+          + '</div>';
+      }).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:0.4rem 0">Cap historial disponible.</div>';
+
+  picker.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">'
+    + '<div style="font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3)">Afegir outfit</div>'
+    + '<button class="chip" style="font-size:11px" id="oc-picker-close">\u00d7 Tancar</button>'
+    + '</div>'
+    + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:500;margin-bottom:0.35rem">Guardats</div>'
+    + '<div id="oc-pick-saved">' + savedHTML + '</div>'
+    + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:500;margin:0.75rem 0 0.35rem">Historial</div>'
+    + '<div id="oc-pick-hist">' + histHTML + '</div>';
+
+  picker.style.display = 'block';
+
+  document.getElementById('oc-picker-close').addEventListener('click', () => { picker.style.display = 'none'; });
+
+  picker.querySelectorAll('[data-picktype="saved"]').forEach(row => {
+    row.addEventListener('click', async () => {
+      const o = savedOutfits[parseInt(row.dataset.pickidx)];
+      oc.outfits.push({type:'saved', outfitId: o.id});
+      await saveOcasions();
+      picker.style.display = 'none';
+      renderPinnedOutfits(oc, iMap);
+    });
+  });
+  picker.querySelectorAll('[data-picktype="historial"]').forEach(row => {
+    row.addEventListener('click', async () => {
+      const o = histOutfits[parseInt(row.dataset.pickidx)];
+      const label = nucleusName(o);
+      oc.outfits.push({type:'historial', nucleusKey: o.nucleusKey, label, count: o.count, lastWorn: o.lastWorn});
+      await saveOcasions();
+      picker.style.display = 'none';
+      renderPinnedOutfits(oc, iMap);
     });
   });
 }
