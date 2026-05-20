@@ -124,21 +124,29 @@ async function boot(){
   await openDB();
   setBootProgress(30,'Comprovant dades…');
   const seeded = await dbGet('meta','seeded');
-  if(!seeded){
+  if(!seeded || (seeded.version||0) < 2){
+    // Clear stale seed data before re-seeding
+    await Promise.all(['items','wears','outfits'].map(s=>new Promise((res,rej)=>{const t=db.transaction(s,'readwrite');t.objectStore(s).clear().onsuccess=()=>res();t.onerror=e=>rej(e.target.error);})));
     setBootProgress(50,'Important peces de roba…');
     for(const raw of RAW_ITEMS){
       await dbPut('items', buildItem(raw));
     }
-    setBootProgress(75,'Important registre de roba…');
+    setBootProgress(65,'Important registre de roba…');
     for(const w of RAW_WEARS){
       for(const itemId of w.items){
         await dbAdd('wears',{date:w.date, itemId, outfitLabel:'', seeded:true});
       }
     }
+    setBootProgress(75,'Important outfits…');
+    for(const o of RAW_OUTFITS){
+      const iMap={};RAW_ITEMS.forEach(it=>iMap[it.id]=it);
+      await dbPut('outfits',{id:o.id,name:o.name,pieces:o.pieces.map(id=>({itemId:id,text:iMap[id]?iMap[id].brand+' '+iMap[id].name:id,catKey:iMap[id]?.category||''})),wears:0,lastWorn:null,favourite:false});
+    }
+    await dbPut('meta',{key:'ocasions',value:RAW_OCASIONS});
     // Set lastWorn + recalc wear counts from actual wear records
     await refreshLastWorn();
     await recalcWearCounts();
-    await dbPut('meta',{key:'seeded', value:true, version:1});
+    await dbPut('meta',{key:'seeded', value:true, version:2});
     setBootProgress(90,'Finalitzant…');
   } else {
     setBootProgress(90,'Carregant dades…');
