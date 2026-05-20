@@ -71,7 +71,7 @@ function renderOcasionsGrid(allWears){
 
   grid.innerHTML = ocasionsList.map((oc, idx) => {
     const col = palette[idx % palette.length];
-    const n = counts[oc.name] || 0;
+    const n = (oc.outfits && oc.outfits.length) || 0;
     return '<div class="ocasio-card" data-ocname="' + esc(oc.name) + '">'
       + '<button class="ocasio-del" data-deloc="' + esc(oc.id) + '" title="Eliminar">\u00d7</button>'
       + '<div style="display:flex;align-items:center;margin-bottom:0.35rem">'

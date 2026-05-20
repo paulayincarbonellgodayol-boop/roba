@@ -394,7 +394,7 @@ async function saveOutfit(){
     favourite: false,
   };
   await dbPut('outfits', outfit);
-  toast('Outfit guardat ✓');
+  toast('Outfit desat ✓');
   clearOutfitBuilder();
   await renderOutfitsList();
 }

@@ -19,7 +19,7 @@ const TYPES_BY_CAT = {
   SABATES:['Bambes','Botina','Sandàlies','Xancletes','Altres'],
   ARRACADES:['Llarga','Curta','Aro','Altres'],
   BOLSO:['Bandolera','Motxilla','Nanses','Formal','Ronyonera','Altres'],
-  ALTRES:['Cinturó','Ulleres de sol','Biquíni','Guants','Paraigüies','Altres'],
+  ALTRES:['Cinturó','Ulleres de sol','Biquini','Guants','Paraigua','Altres'],
 };
 
 let wrdPage = 1;
@@ -132,8 +132,8 @@ function buildFilterBar(allItems){
     cols.forEach(c => { if(c) colorSet.add(c); });
   });
   const sorted = [...colorSet].sort();
-  const mIdx = sorted.indexOf('multicolor');
-  if(mIdx > 0){ sorted.splice(mIdx, 1); sorted.unshift('multicolor'); }
+  const mIdx = sorted.findIndex(c => c.toLowerCase() === 'multicolor');
+  if(mIdx > 0){ const mc = sorted.splice(mIdx, 1)[0]; sorted.unshift(mc); }
   const colors = sorted;
   const brands = [...new Set(allItems.map(i=>i.brand).filter(Boolean))].sort();
   const sizes  = [...new Set(allItems.map(i=>i.size).filter(Boolean))].sort();
@@ -365,10 +365,9 @@ async function renderWardrobe(){
   grid.innerHTML = slice.map(item => {
     const isRetired = item.units?.length>0&&item.units.every(u=>u.retired);
     const cpwStr = item.wears>0?item.cpw.toFixed(2)+'€':'—';
-    const seasons = item.seasons.map(s=>'<span class="pill pill-season">'+(SEASON_LABELS[s]||s)+'</span>').join('');
-    const formalPills = item.formality.map(f=>'<span class="pill pill-formal">'+(FORMAL_LABELS[f]||f)+'</span>').join('');
     const needsPill = item.needsInfo?'<span class="pill pill-warn">Cal info</span>':'';
     const retiredPill = isRetired?'<span class="pill" style="background:#E5E5E5;color:#888">Retirada</span>':'';
+    const tagPills = (item.tags&&item.tags.length)?item.tags.map(t=>'<span class="pill pill-tag">'+esc(t)+'</span>').join(''):'';
     const isSelected = wrdSelected.has(item.id);
     return '<div class="item-card fade-in'+(item.needsInfo?' needs-info':'')+(item.favourite?' favourite':'')+(wrdSelectMode?' selectable':'')+(isSelected?' selected-card':'')+'" data-id="'+item.id+'" style="'+(isRetired?'opacity:0.55':'')+'">'
       +(wrdSelectMode?'<input type="checkbox" class="select-checkbox"'+(isSelected?' checked':'')+'>'  :'')
@@ -382,8 +381,7 @@ async function renderWardrobe(){
       return '<div class="ic-name">'+item.name+'</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:0.4rem">'+cols.map(c=>colorPill(c)).join('')+'</div>';
     })()
-      +'<div class="ic-pills"><span class="pill pill-cat">'+(CAT_LABELS[item.category]||item.category)+'</span>'+(item.type?'<span class="pill pill-type">'+item.type+'</span>':'')+seasons+formalPills+needsPill+retiredPill+'</div>'
-      +((item.tags&&item.tags.length)?'<div class="ic-tags">'+item.tags.map(t=>'<span class="pill pill-tag">'+esc(t)+'</span>').join('')+'</div>':'')
+      +'<div class="ic-pills"><span class="pill pill-cat">'+(CAT_LABELS[item.category]||item.category)+'</span>'+(item.type?'<span class="pill pill-type">'+item.type+'</span>':'')+tagPills+needsPill+retiredPill+'</div>'
       +'<div class="ic-stats"><div class="ic-stat"><div class="ic-stat-val">'+item.wears+'</div><div class="ic-stat-lbl">Usos</div></div><div class="ic-stat"><div class="ic-stat-val">'+(item.totalCost>0?item.totalCost.toFixed(0)+'€':'—')+'</div><div class="ic-stat-lbl">Cost total</div></div><div class="ic-stat"><div class="ic-stat-val">'+cpwStr+'</div><div class="ic-stat-lbl">CPU</div></div></div>'
       +'</div>';
   }).join('');

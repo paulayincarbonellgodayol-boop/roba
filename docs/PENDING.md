@@ -31,6 +31,11 @@ _Update this file as items are solved or added._
 
 | # | Description | How solved |
 |---|-------------|------------|
+| — | Ocasions cards: outfit count showed 0 (read from empty wear field) | Fixed to read `oc.outfits.length` instead — current session |
+| — | Spelling: "Guardar outfit" → "Desar outfit", "guardat" → "desat", "Biquíni" → "Biquini", "Paraigüies" → "Paraigua" | Corrected across index.html, outfits.js, wardrobe.js — current session |
+| — | Demo seed replaced: 78 items · 20 outfits · 9 ocasions · ~500 wear records (2023–2026), brands from Spanish market | `js/seed.js` rewritten; boots automatically on first load or DB version < 2 — 02e2c9e |
+| — | Item cards: seasons and formality hidden, tags inline with category/type pills | Removed from card render in `wardrobe.js` — current session |
+| — | Color filter: Multicolor always sorted to top | `findIndex` with case-insensitive match — current session |
 | **41** | Ocasions: clicking a pinned outfit shows detail | Floating dialog (`.hm-save-dialog` pattern) — cb91d3c |
 | **40** | OR/AND filter toggles → Catalan (ALGUN/TOTS) | Text swap in `buildMultiPanelWithFlowers` + `buildTagPanel` — cb91d3c |
 | **36** | Multi-select dropdowns don't auto-close | Confirmed not a bug: panels stay open for multi-select, close on outside click via document listener |
