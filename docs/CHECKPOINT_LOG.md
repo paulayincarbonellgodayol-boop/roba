@@ -569,3 +569,36 @@ Extracted the DB wrapper (lines 1–112) from `app.js` into `js/persistence.js`.
 ### Next
 
 - Original CP9: full regression checklist.
+
+---
+
+## CP11 — Code Quality Audit + Color Search Fix (2026-05-21)
+
+### What Changed
+
+Ran a full architecture and code-quality audit (no UI or capability changes). One real bug found and fixed:
+
+- **`wardrobe.js` line 342** — wardrobe text search used `i.color.toLowerCase()` which throws if `i.color` is undefined (items stored with the new `colors` array format after `migrateColorsToArrays()` runs). Fixed to read `i.colors` array first (`join(' ')`), falling back to `i.color` string, with a safe `||''` guard.
+
+Audit also flagged a potential event-listener leak in `buildFilterBar()` — confirmed false positive; the existing `wrdFilterBarBuilt` guard (line 124) already ensures the listener is registered exactly once per session.
+
+### Files Touched
+
+- `js/wardrobe.js`
+- `docs/CHECKPOINT_LOG.md`
+
+### Intentionally Not Changed
+
+- No HTML, CSS, IndexedDB schema, or UI behavior changed.
+- No other logic touched — audit findings for missing `.catch()` and sequential boot writes noted for a future defensive pass.
+
+### Audit Findings Summary
+
+| Severity | Finding | Status |
+|----------|---------|--------|
+| HIGH (false positive) | `buildFilterBar` listener leak | Already guarded by `wrdFilterBarBuilt` |
+| MEDIUM (fixed) | `i.color.toLowerCase()` crashes on array-format items | Fixed in this CP |
+| MEDIUM | Missing `.catch()` on DB calls across outfits/ocasions | Noted, not changed |
+| MEDIUM | Seed loop has no error handling | Noted, not changed |
+| MEDIUM | Saved outfit pieces lack referential integrity check | Noted, not changed |
+| LOW | Boot writes sequential (`refreshLastWorn`, `recalcWearCounts`) | Noted, not changed |
