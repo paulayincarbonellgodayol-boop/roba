@@ -339,7 +339,7 @@ async function renderWardrobe(){
   if(wrdActiveFilters.needsInfo) items = items.filter(i=>i.needsInfo);
   if(search) items = items.filter(i=>
     i.brand.toLowerCase().includes(search)||i.name.toLowerCase().includes(search)||
-    i.color.toLowerCase().includes(search)||(i.type||'').toLowerCase().includes(search));
+    (Array.isArray(i.colors)&&i.colors.length?i.colors.join(' '):(i.color||'')).toLowerCase().includes(search)||(i.type||'').toLowerCase().includes(search));
 
   if(sort==='reps_desc') items.sort((a,b)=>b.wears-a.wears);
   else if(sort==='reps_asc') items.sort((a,b)=>a.wears-b.wears);
