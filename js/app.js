@@ -335,7 +335,7 @@ async function openItemModal(id){
         const compStr = comp.length ? comp.slice(0,3).join(' · ') + (comp.length>3?' +' + (comp.length-3):'') : '—';
         return '<tr>'
           + '<td class="wh-date-cell" data-date="' + w.date + '">' + formatDate(w.date) + '</td>'
-          + '<td class="wh-comp-cell">' + esc(compStr) + '</td>'
+          + '<td class="wh-comp-cell"><span class="wh-comp-inner">' + esc(compStr) + '</span></td>'
           + '<td class="wh-del-cell"><button class="wh-del-btn" data-wid="' + w.id + '" title="Eliminar registre">×</button></td>'
           + '</tr>';
       }).join('');
@@ -343,7 +343,7 @@ async function openItemModal(id){
         + '<button class="wh-year-hdr' + (isOpen ? ' open' : '') + '">'
         + '<span>' + year + '</span>'
         + '<span class="wh-yr-count">' + yw.length + ' ' + (yw.length === 1 ? 'ús' : 'usos') + '</span>'
-        + '<span class="wh-chevron">' + (isOpen ? '▾︎' : '▶︎') + '</span>'
+        + '<span class="wh-chevron">▶︎</span>'
         + '</button>'
         + '<table class="wh-table"' + (isOpen ? '' : ' style="display:none"') + '><tbody>' + rows + '</tbody></table>'
         + '</div>';

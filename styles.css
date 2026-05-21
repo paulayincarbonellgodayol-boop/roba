@@ -394,9 +394,10 @@ nav > *{
 .wh-chevron{margin-left:auto;font-size:10px;color:var(--text3)}
 .wh-table{width:100%;border-collapse:collapse;margin-bottom:0.4rem}
 .wh-table td{padding:0.28rem 0;font-size:13px;vertical-align:top}
-.wh-date-cell{white-space:nowrap;color:var(--text);width:1%;cursor:pointer}
+.wh-date-cell{white-space:nowrap;color:var(--text);width:1%;cursor:pointer;padding-right:0.65rem}
 .wh-date-cell:hover{text-decoration:underline;text-underline-offset:2px}
-.wh-comp-cell{color:var(--text3);font-size:12px;padding-left:0.75rem}
+.wh-comp-cell{color:var(--text3);font-size:12px;padding-left:0.65rem}
+.wh-comp-inner{border-left:1px solid var(--border2);padding-left:0.65rem;display:inline-block;font-size:11px}
 .wh-del-cell{text-align:right;width:1%;padding-left:0.5rem}
 .wh-del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;line-height:1;padding:0 0.15rem;opacity:0.4}
 .wh-del-btn:hover{color:var(--danger);opacity:1}

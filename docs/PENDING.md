@@ -31,6 +31,7 @@ _Update this file as items are solved or added._
 
 | # | Description | How solved |
 |---|-------------|------------|
+| — | Wear history (item modal): companion text font reduced to 11px; vertical separator line between date and companions via `inline-block` span (reliable cross-browser); spacing 0.65rem each side | CSS + JS wrapper — current session |
 | — | Ocasions cards: outfit count showed 0 (read from empty wear field) | Fixed to read `oc.outfits.length` instead — current session |
 | — | Spelling: "Guardar outfit" → "Desar outfit", "guardat" → "desat", "Biquíni" → "Biquini", "Paraigüies" → "Paraigua" | Corrected across index.html, outfits.js, wardrobe.js — current session |
 | — | Demo seed replaced: 78 items · 20 outfits · 9 ocasions · ~500 wear records (2023–2026), brands from Spanish market | `js/seed.js` rewritten; boots automatically on first load or DB version < 2 — 02e2c9e |
