@@ -582,10 +582,16 @@ Ran a full architecture and code-quality audit (no UI or capability changes). On
 
 Audit also flagged a potential event-listener leak in `buildFilterBar()` — confirmed false positive; the existing `wrdFilterBarBuilt` guard (line 124) already ensures the listener is registered exactly once per session.
 
+Audit also identified the color resolution expression (`Array.isArray(item.colors) && item.colors.length ? ... : item.color.split(...)`) duplicated 7 times across 3 files. Extracted into a shared helper `resolveColors(item)` in `utils.js` and replaced 5 of the 7 sites. The remaining 2 sites (`app.js:381`, `wardrobe.js:378`) intentionally use a `['']` fallback instead of `[]` — this produces a grey icon colour via `colorToHex('')` rather than the dark default, so they are kept distinct. `app.js:538` uses `item.colors ||` (no length check) for the edit form and is also kept as-is.
+
 ### Files Touched
 
 - `js/wardrobe.js`
+- `js/app.js`
+- `js/utils.js`
+- `js/favourites.js`
 - `docs/CHECKPOINT_LOG.md`
+- `docs/ARCHITECTURE_INVENTORY.md`
 
 ### Intentionally Not Changed
 
@@ -598,6 +604,7 @@ Audit also flagged a potential event-listener leak in `buildFilterBar()` — con
 |----------|---------|--------|
 | HIGH (false positive) | `buildFilterBar` listener leak | Already guarded by `wrdFilterBarBuilt` |
 | MEDIUM (fixed) | `i.color.toLowerCase()` crashes on array-format items | Fixed in this CP |
+| MEDIUM (fixed) | Color resolution logic duplicated 7× across 3 files | `resolveColors()` extracted to `utils.js`; 5 sites replaced |
 | MEDIUM | Missing `.catch()` on DB calls across outfits/ocasions | Noted, not changed |
 | MEDIUM | Seed loop has no error handling | Noted, not changed |
 | MEDIUM | Saved outfit pieces lack referential integrity check | Noted, not changed |

@@ -59,7 +59,7 @@ async function initColorSelector(existingColors){
   const allItems=await dbGetAll('items');
   const cs=new Set();
   allItems.forEach(it=>{
-    const cols=Array.isArray(it.colors)?it.colors:(it.color?it.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean):[]);
+    const cols=resolveColors(it);
     cols.forEach(c=>{if(c)cs.add(c);});
   });
   colorOptionsCache=[...cs].sort();
@@ -386,7 +386,7 @@ async function openItemModal(id){
     })()
     + '</div><button class="modal-close" onclick="closeItemModal()">\u00d7</button></div>'
     + (()=>{
-      const cols=Array.isArray(item.colors)&&item.colors.length?item.colors:(item.color?item.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean):[]);
+      const cols=resolveColors(item);
       return '<div class="detail-photo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3)">'+catIconSVG(item.category,cols,80)+'</div>';
     })()
     + '<div class="detail-stats">'

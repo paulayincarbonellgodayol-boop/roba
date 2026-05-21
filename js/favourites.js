@@ -27,7 +27,7 @@ async function renderFavItems(){
   empty.style.display='none';
   grid.innerHTML = items.map(item =>
     '<div class="item-card favourite" data-id="'+item.id+'">'
-    +(()=>{ const cols=Array.isArray(item.colors)&&item.colors.length?item.colors:(item.color?item.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean):[]); return '<div class="ic-photo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3)">'+catIconSVG(item.category,cols,56)+'</div>'; })()
+    +'<div class="ic-photo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3)">'+catIconSVG(item.category,resolveColors(item),56)+'</div>'
     +'<div class="ic-brand">'+item.brand+'</div>'
     +'<div class="ic-name">'+item.name+' · '+item.color+'</div>'
     +'<div class="ic-pills"><span class="pill pill-cat">'+(CAT_LABELS[item.category]||item.category)+'</span>'+(item.type?'<span class="pill pill-type">'+item.type+'</span>':'')+'</div>'

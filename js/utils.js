@@ -65,6 +65,11 @@ function colorPill(colorName){
   return '<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:2px 7px 2px 4px;font-size:11px">' + flowerSVG(colorName,11) + ' ' + esc(colorName) + '</span>';
 }
 
+function resolveColors(item){
+  if(Array.isArray(item.colors) && item.colors.length) return item.colors;
+  return item.color ? item.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean) : [];
+}
+
 function catIconSVG(category, colors, size){
   size = size || 80;
   const col = colors && colors.length ? colorToHex(colors[0]) : '#1A1714';

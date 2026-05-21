@@ -126,9 +126,7 @@ function buildFilterBar(allItems){
 
   const colorSet = new Set();
   allItems.forEach(it => {
-    const cols = Array.isArray(it.colors) && it.colors.length
-      ? it.colors
-      : (it.color ? it.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean) : []);
+    const cols = resolveColors(it);
     cols.forEach(c => { if(c) colorSet.add(c); });
   });
   const sorted = [...colorSet].sort();
@@ -313,7 +311,7 @@ async function renderWardrobe(){
   if(wrdActiveFilters.seasons.length) items = items.filter(i=>i.seasons.length===0||wrdActiveFilters.seasons.some(s=>i.seasons.includes(s)));
   if(wrdActiveFilters.formality.length) items = items.filter(i=>i.formality.length===0||wrdActiveFilters.formality.some(f=>i.formality.includes(f)));
   if(wrdActiveFilters.colors.length) items = items.filter(i=>{
-    const cols=(Array.isArray(i.colors)&&i.colors.length?i.colors:(i.color?i.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean):[])).map(c=>c.toLowerCase());
+    const cols=resolveColors(i).map(c=>c.toLowerCase());
     if(wrdActiveFilters.colorOp==='AND')
       return wrdActiveFilters.colors.every(c=>cols.includes(c.toLowerCase()));
     return wrdActiveFilters.colors.some(c=>cols.includes(c.toLowerCase()));
@@ -372,7 +370,7 @@ async function renderWardrobe(){
     return '<div class="item-card fade-in'+(item.needsInfo?' needs-info':'')+(item.favourite?' favourite':'')+(wrdSelectMode?' selectable':'')+(isSelected?' selected-card':'')+'" data-id="'+item.id+'" style="'+(isRetired?'opacity:0.55':'')+'">'
       +(wrdSelectMode?'<input type="checkbox" class="select-checkbox"'+(isSelected?' checked':'')+'>'  :'')
       +(()=>{
-      const cols=Array.isArray(item.colors)&&item.colors.length?item.colors:(item.color?item.color.split(/\s+i\s+|,\s*/).map(c=>c.trim()).filter(Boolean):[]);
+      const cols=resolveColors(item);
       return '<div class="ic-photo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3)">'+catIconSVG(item.category,cols,56)+'</div>';
     })()
       +'<div class="ic-brand">'+item.brand+'</div>'
