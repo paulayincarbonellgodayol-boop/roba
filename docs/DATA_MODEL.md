@@ -7,7 +7,7 @@ This document describes the data shapes used by the current working app. It docu
 
 ## IndexedDB
 
-- Database: `roba_db`
+- Database: `roba_db_demo`
 - Version: `3`
 
 Stores:
@@ -50,6 +50,7 @@ Core fields:
   retiredUnits?: number,
   notes: string,
   lastWorn: string | null,
+  tags: string[],
   seeded: boolean
 }
 ```
@@ -57,10 +58,8 @@ Core fields:
 ### Compatibility Notes
 
 - `color` is the legacy display field and remains important.
-- `colors` is the newer array field.
-- Rendering should continue to support both:
-  - prefer `colors` when it is an array with values
-  - fall back to splitting `color`
+- `colors` is the newer array field; `migrateColorsToArrays()` in `persistence.js` converts existing items on boot.
+- All rendering that needs a color array must use `resolveColors(item)` from `utils.js` (added CP11). It returns `item.colors` when available, otherwise parses `item.color`, otherwise `[]`. Two render sites intentionally use `[item.color||'']` as fallback for the icon colour — do not replace those with `resolveColors()`.
 - Ghost items created from free-text log entries use `needsInfo: true`.
 
 ### Derived Fields
@@ -171,7 +170,7 @@ Stored in `meta` with `key` as the primary key.
 Known records:
 
 ```js
-{ key: 'seeded', value: true, version: 1 }
+{ key: 'seeded', value: true, version: 2 }
 ```
 
 ```js
@@ -184,9 +183,19 @@ Known records:
 {
   id: string,
   name: string,
-  preset: boolean
+  preset: boolean,
+  outfits?: OcasioOutfitRef[]
 }
 ```
+
+`outfits` is an array of pinned outfit references on the occasion card. Each entry is either:
+
+```js
+{ type: 'saved', outfitId: string }       // references an outfit in the outfits store
+{ type: 'historial', nucleusKey: string } // references a nucleus from wear history
+```
+
+The ocasion card count is derived from `oc.outfits.length`.
 
 ## Trash
 

@@ -149,7 +149,7 @@ The original inventory above was written at CP1 when everything lived in two fil
 | # | File | Lines | Responsibility |
 |---|------|-------|----------------|
 | 1 | `js/persistence.js` | 118 | IndexedDB open, schema upgrade, all DB helpers (`dbGet`, `dbPut`, `dbAdd`, `dbDelete`, `dbGetAll`, `dbGetIndex`, `migrateColorsToArrays`) |
-| 2 | `js/utils.js` | 208 | Pure browser globals: color helpers, `esc`, `formatDate`, `flowerSVG`, `colorPill`, `catIconSVG`, `buildPaginator`, `toast`, dashboard calc helpers |
+| 2 | `js/utils.js` | 212 | Pure browser globals: color helpers, `esc`, `formatDate`, `flowerSVG`, `colorPill`, `catIconSVG`, `resolveColors`, `buildPaginator`, `toast`, dashboard calc helpers |
 | 3 | `js/dashboard.js` | 150 | HTML builders and canvas renderer for the dashboard view: `buildStatStripHTML`, `statCardHTML`, `highlightCardHTML`, `buildMonthSummaryHTML`, `renderCPUChart` |
 | 4 | `js/wardrobe.js` | 437 | All wardrobe constants (`CAT_LABELS`, `TYPES_BY_CAT`, `SEASON_LABELS`, `FORMAL_LABELS`, `STATUS_LABELS`), wardrobe state, filter bar, card rendering, chip filters, pagination |
 | 5 | `js/brands.js` | 53 | `renderBrands`, `filterByBrand` |
