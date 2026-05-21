@@ -135,3 +135,66 @@ Avoid:
 ## CP1 Status
 
 No app behavior changes were made for this checkpoint.
+
+---
+
+# Architecture Re-Analysis — 2026-05-21 (CP11)
+
+The original inventory above was written at CP1 when everything lived in two files (`utils.js` + `app.js`). After CP2–CP11 the codebase was modularised. This section records the current state without modifying the original.
+
+## Active Runtime Files
+
+`index.html` is still the single entry point. It now loads 12 scripts in this order:
+
+| # | File | Lines | Responsibility |
+|---|------|-------|----------------|
+| 1 | `js/persistence.js` | 118 | IndexedDB open, schema upgrade, all DB helpers (`dbGet`, `dbPut`, `dbAdd`, `dbDelete`, `dbGetAll`, `dbGetIndex`, `migrateColorsToArrays`) |
+| 2 | `js/utils.js` | 208 | Pure browser globals: color helpers, `esc`, `formatDate`, `flowerSVG`, `colorPill`, `catIconSVG`, `buildPaginator`, `toast`, dashboard calc helpers |
+| 3 | `js/dashboard.js` | 150 | HTML builders and canvas renderer for the dashboard view: `buildStatStripHTML`, `statCardHTML`, `highlightCardHTML`, `buildMonthSummaryHTML`, `renderCPUChart` |
+| 4 | `js/wardrobe.js` | 437 | All wardrobe constants (`CAT_LABELS`, `TYPES_BY_CAT`, `SEASON_LABELS`, `FORMAL_LABELS`, `STATUS_LABELS`), wardrobe state, filter bar, card rendering, chip filters, pagination |
+| 5 | `js/brands.js` | 53 | `renderBrands`, `filterByBrand` |
+| 6 | `js/favourites.js` | 68 | `renderFavourites`, `switchFavTab`, `renderFavItems`, `renderFavOutfits` |
+| 7 | `js/calendar.js` | 253 | Calendar state, `renderCalendar`, `openDayModal`, navigation helpers |
+| 8 | `js/log.js` | 342 | Log-day flow: piece picker, autocomplete, CPW display, `submitLog`, `loadDayHistory`, `deleteOutfit` |
+| 9 | `js/outfits.js` | 960 | Outfit history (Historial), outfit builder, saved outfits (Guardats), two-step picker, accordion, nucleus chips |
+| 10 | `js/seed.js` | 290 | Demo data: `RAW_ITEMS`, `RAW_OUTFITS`, `RAW_OCASIONS`, `buildItem`, `buildWears`, `mapSeason` — auto-boots on first load or DB version < 2 |
+| 11 | `js/ocasions.js` | 436 | Ocasions tab: grid, detail view, pinned outfit dialog, log-ocasio picker |
+| 12 | `js/app.js` | 1094 | Boot, nav/view switching, `renderDashboard`, item detail modal, item add/edit form, color selector, tag input, unit rows, retire/delete, trash, export/import, debug helpers |
+
+Total active JS: ~4 400 lines across 12 files (down from ~4 300 lines in two files at CP1).
+
+## IndexedDB
+
+- **Database:** `roba_db_demo`
+- **Version:** `3`
+- **Stores:** `items`, `wears`, `meta`, `outfits`, `trash`
+- Ocasions are stored as a JSON value inside `meta` (`key: 'ocasions'`), not as a separate store.
+- Seed version tracked in `meta` (`key: 'seeded', version: 2`); re-seeds if missing or version < 2.
+
+## Global State (unchanged pattern)
+
+All state is still plain globals — no state manager, no module system. Feature-level grouping:
+
+| File | State globals |
+|------|--------------|
+| `wardrobe.js` | `wrdPage`, `wrdSelectMode`, `wrdSelected`, `wrdActiveFilters`, `wrdFilterBarBuilt` |
+| `calendar.js` | `calYear`, `calMonth` |
+| `log.js` | `logPieces`, `logItemCache`, `logDateInited`, `acHiIdx` |
+| `outfits.js` | `outfitBuilderPieces`, `historyOutfitsCache`, `historyIMap`, `historySort`, `smartSelectedItem`, `historialStackFilters` |
+| `ocasions.js` | `ocasionsList`, `logOcasioSelected` |
+| `app.js` | `editingItemId`, `formUnits`, `unitCounter`, `itemTags`, `itemColors`, `colorOptionsCache`, `retireContext` |
+
+## Inactive / Quarantined Files
+
+`inactive_refactor/js/` — partial earlier modular refactor, not loaded, retained for reference only (quarantined in CP2).
+
+## Known Quality Notes (from CP11 audit)
+
+- Color data exists in two formats: legacy `item.color` (string) and migrated `item.colors` (array). All read paths now handle both; `migrateColorsToArrays()` runs on boot.
+- Most `dbGetAll`/`dbGet`/`dbPut` calls lack `.catch()` — silent failures possible on DB errors. Noted for a future defensive pass.
+- Boot writes (`refreshLastWorn`, `recalcWearCounts`) are sequential; could be parallelised with `Promise.all()` without behaviour change.
+- `buildFilterBar()` correctly guards against duplicate listener registration via `wrdFilterBarBuilt`.
+
+## Protected Rule (still applies)
+
+Refactors must not change visible UI, design, labels, navigation behaviour, data compatibility, or app capabilities unless explicitly requested.
