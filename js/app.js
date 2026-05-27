@@ -124,7 +124,7 @@ async function boot(){
   await openDB();
   setBootProgress(30,'Comprovant dades…');
   const seeded = await dbGet('meta','seeded');
-  if(!seeded || (seeded.version||0) < 2){
+  if(!seeded || (seeded.version||0) < 3){
     // Clear stale seed data before re-seeding
     await Promise.all(['items','wears','outfits'].map(s=>new Promise((res,rej)=>{const t=db.transaction(s,'readwrite');t.objectStore(s).clear().onsuccess=()=>res();t.onerror=e=>rej(e.target.error);})));
     setBootProgress(50,'Important peces de roba…');
@@ -146,7 +146,7 @@ async function boot(){
     // Set lastWorn + recalc wear counts from actual wear records
     await refreshLastWorn();
     await recalcWearCounts();
-    await dbPut('meta',{key:'seeded', value:true, version:2});
+    await dbPut('meta',{key:'seeded', value:true, version:3});
     setBootProgress(90,'Finalitzant…');
   } else {
     setBootProgress(90,'Carregant dades…');

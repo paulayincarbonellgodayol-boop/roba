@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
 //  SEED DATA — demo wardrobe 2023-2026
-//  78 items · 20 outfits · 9 ocasions · ~500 wear records
+//  85 items · 21 outfits · 9 ocasions · ~500 wear records
 // ══════════════════════════════════════════
 
 function mapSeason(s){
@@ -50,7 +50,7 @@ const RAW_ITEMS = [
 {id:'si029',category:'BAIX',brand:'Pepe Jeans',     name:"Texans boca d'ampolla",        color:'Blau',       type:'Texans',   rawSeason:'Entretemps+Estiu',rawFormality:'casual,smart-casual',size:'27', price:70,  purchaseYear:'2023',tags:[]},
 {id:'si030',category:'BAIX',brand:'Zara',           name:'Pantalons de lli verd fosc',   color:'Verd',       type:'Pantalons',rawSeason:'Primavera/Estiu',rawFormality:'casual,smart-casual', size:'36', price:40,  purchaseYear:'2024',tags:[]},
 {id:'si031',category:'BAIX',brand:'H&M',            name:'Faldilla denim midi',          color:'Blau',       type:'Faldilla', rawSeason:'Primavera/Estiu',rawFormality:'casual',              size:'36', price:25,  purchaseYear:'2023',tags:[]},
-{id:'si032',category:'BAIX',brand:'Stradivarius',   name:'Pantalons de cuero negres',    color:'Negre',      type:'Pantalons',rawSeason:'Tardor/Hivern',  rawFormality:'casual,smart-casual', size:'36', price:35,  purchaseYear:'2024',tags:[]},
+{id:'si032',category:'BAIX',brand:'Stradivarius',   name:'Pantalons de cuir negres',    color:'Negre',      type:'Pantalons',rawSeason:'Tardor/Hivern',  rawFormality:'casual,smart-casual', size:'36', price:35,  purchaseYear:'2024',tags:[]},
 {id:'si033',category:'BAIX',brand:'Mango',          name:'Shorts de lli beix',           color:'Beix',       type:'Shorts',   rawSeason:'Estiu',          rawFormality:'casual,smart-casual', size:'36', price:30,  purchaseYear:'2023',tags:['estiu']},
 {id:'si034',category:'BAIX',brand:'Scalpers',       name:'Pantalons chino beix',         color:'Beix',       type:'Pantalons',rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'36', price:65,  purchaseYear:'2022',tags:[]},
 {id:'si035',category:'BAIX',brand:'Primark',        name:'Texans rectes negres',         color:'Negre',      type:'Texans',   rawSeason:'Tot',            rawFormality:'casual',              size:'36', price:15,  purchaseYear:'2023',tags:['bàsic']},
@@ -73,7 +73,7 @@ const RAW_ITEMS = [
 {id:'si048',category:'JAQUETA',brand:'Massimo Dutti',name:'Americana de llana gris',     color:'Gris',       type:'Americana',rawSeason:'Tardor/Hivern',  rawFormality:'smart-casual,formal', size:'36', price:180, purchaseYear:'2022',tags:['feina']},
 {id:'si049',category:'JAQUETA',brand:'Scalpers',    name:'Jaqueta bomber verda',         color:'Verd',       type:'Jaqueta',  rawSeason:'Entretemps',     rawFormality:'casual',              size:'S',  price:90,  purchaseYear:'2024',tags:[]},
 {id:'si050',category:'JAQUETA',brand:'Mango',       name:'Abric oversize beix',          color:'Beix',       type:'Abric',    rawSeason:'Tardor/Hivern',  rawFormality:'casual,smart-casual', size:'S',  price:105, purchaseYear:'2023',tags:['hivern']},
-{id:'si051',category:'JAQUETA',brand:'Ralph Lauren', name:'Jaqueta acolchada navy',      color:'Blau',       type:'Jaqueta',  rawSeason:'Tardor/Hivern',  rawFormality:'casual,smart-casual', size:'S',  price:195, purchaseYear:'2023',tags:[]},
+{id:'si051',category:'JAQUETA',brand:'Ralph Lauren', name:'Jaqueta acolxada navy',      color:'Blau',       type:'Jaqueta',  rawSeason:'Tardor/Hivern',  rawFormality:'casual,smart-casual', size:'S',  price:195, purchaseYear:'2023',tags:[]},
 {id:'si052',category:'JAQUETA',brand:'Stradivarius',name:'Jaqueta vaquera clara',        color:'Blau',       type:'Texana',   rawSeason:'Entretemps+Estiu',rawFormality:'casual',             size:'S',  price:35,  purchaseYear:'2023',tags:[]},
 
 /* ── SABATES (10 shoes) ──────────────────────────────────────────── */
@@ -94,7 +94,7 @@ const RAW_ITEMS = [
 {id:'si065',category:'ARRACADES',brand:'Tous',      name:'Arracades rodones plata',      color:'Platejat',   type:'Curta',    rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'única',price:65, purchaseYear:'2022',tags:[]},
 {id:'si066',category:'ARRACADES',brand:'Bimba y Lola',name:'Arracades llargues blanques',color:'Blanc',      type:'Llarga',   rawSeason:'Tot',            rawFormality:'smart-casual,formal', size:'única',price:75, purchaseYear:'2023',tags:[]},
 {id:'si067',category:'ARRACADES',brand:'Zara',      name:'Arracades de clip negres',     color:'Negre',      type:'Curta',    rawSeason:'Tot',            rawFormality:'casual',              size:'única',price:12, purchaseYear:'2023',tags:[]},
-{id:'si068',category:'ARRACADES',brand:'Mira Mira', name:'Arracades mini daurads',       color:'Daurat',     type:'Curta',    rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'única',price:28, purchaseYear:'2023',tags:['bàsic']},
+{id:'si068',category:'ARRACADES',brand:'Mira Mira', name:'Arracades mini daurades',       color:'Daurat',     type:'Curta',    rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'única',price:28, purchaseYear:'2023',tags:['bàsic']},
 {id:'si069',category:'ARRACADES',brand:'Tous',      name:'Arracades de cor vermell',     color:'Vermell',    type:'Curta',    rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'única',price:45, purchaseYear:'2024',tags:[]},
 {id:'si070',category:'ARRACADES',brand:'Bimba y Lola',name:'Arracades de perles',        color:'Blanc',      type:'Llarga',   rawSeason:'Tot',            rawFormality:'smart-casual,formal', size:'única',price:95, purchaseYear:'2024',tags:[]},
 
@@ -107,6 +107,15 @@ const RAW_ITEMS = [
 {id:'si076',category:'BOLSO',brand:'Longchamp',     name:'Le Pliage negre',              color:'Negre',      type:'',         rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'única',price:95, purchaseYear:'2023',tags:['viatge']},
 {id:'si077',category:'BOLSO',brand:'Tous',          name:'Kaos mini marró',              color:'Marró',      type:'',         rawSeason:'Tot',            rawFormality:'casual,smart-casual', size:'única',price:120,purchaseYear:'2024',tags:[]},
 {id:'si078',category:'BOLSO',brand:'Zara',          name:'Bossa de roba negra',          color:'Negre',      type:'',         rawSeason:'Tot',            rawFormality:'casual',              size:'única',price:22, purchaseYear:'2024',tags:[]},
+
+/* ── ALTRES (7 accessories) ──────────────────────────────────────── */
+{id:'si079',category:'ALTRES',brand:'Massimo Dutti',name:'Cinturó de cuir negre',          color:'Negre',  type:'Cinturó',       rawSeason:'Tot',            rawFormality:'casual,smart-casual,formal',size:'única',price:45, purchaseYear:'2022',tags:['bàsic']},
+{id:'si080',category:'ALTRES',brand:'Zara',          name:'Cinturó de cuir marró',          color:'Marró',  type:'Cinturó',       rawSeason:'Tot',            rawFormality:'casual,smart-casual',       size:'única',price:18, purchaseYear:'2023',tags:[]},
+{id:'si081',category:'ALTRES',brand:'Ray-Ban',       name:'Ulleres de sol aviador daurades', color:'Daurat', type:'Ulleres de sol', rawSeason:'Primavera/Estiu',rawFormality:'casual,smart-casual',       size:'única',price:130,purchaseYear:'2022',tags:[]},
+{id:'si082',category:'ALTRES',brand:'Zara',          name:'Ulleres de sol negres quadrades',color:'Negre',  type:'Ulleres de sol', rawSeason:'Primavera/Estiu',rawFormality:'casual,smart-casual',       size:'única',price:22, purchaseYear:'2023',tags:[]},
+{id:'si083',category:'ALTRES',brand:'Massimo Dutti',name:'Guants de pell negres',           color:'Negre',  type:'Guants',        rawSeason:'Tardor/Hivern',  rawFormality:'casual,smart-casual,formal',size:'única',price:55, purchaseYear:'2022',tags:['hivern']},
+{id:'si084',category:'ALTRES',brand:'H&M',           name:'Guants de llana gris',           color:'Gris',   type:'Guants',        rawSeason:'Hivern',         rawFormality:'casual',                    size:'única',price:12, purchaseYear:'2023',tags:['hivern']},
+{id:'si085',category:'ALTRES',brand:'Benetton',      name:'Paraigua plegable negre',        color:'Negre',  type:'Paraigua',      rawSeason:'Tot',            rawFormality:'casual,smart-casual',       size:'única',price:28, purchaseYear:'2023',tags:[]},
 ];
 
 // ──────────────────────────────────────────
@@ -240,6 +249,22 @@ function buildWears(){
       if(boPool.length>0) ids.push(pick(boPool).id);
     }
 
+    // Belt (40% smart-casual, 60% formal)
+    const cintPool=(byCat['ALTRES']||[]).filter(it=>it.type==='Cinturó');
+    if(cintPool.length>0&&outfit!=='casual'&&maybe(outfit==='formal'?0.60:0.40)) ids.push(pick(cintPool).id);
+
+    // Sunglasses (spring/summer, 40%)
+    const ullPool=(byCat['ALTRES']||[]).filter(it=>it.type==='Ulleres de sol'&&fitsSeason(it,b));
+    if(ullPool.length>0&&maybe(0.40)) ids.push(pick(ullPool).id);
+
+    // Gloves (winter 55%, shoulder 15%)
+    const gvPool=(byCat['ALTRES']||[]).filter(it=>it.type==='Guants'&&fitsSeason(it,b));
+    if(gvPool.length>0&&(b==='hivern'?maybe(0.55):(b==='entretemps'&&maybe(0.15)))) ids.push(pick(gvPool).id);
+
+    // Umbrella (10% all year)
+    const umbPool=(byCat['ALTRES']||[]).filter(it=>it.type==='Paraigua');
+    if(umbPool.length>0&&maybe(0.10)) ids.push(pick(umbPool).id);
+
     if(ids.length>0) wears.push({date,items:ids});
   }
 
@@ -252,15 +277,15 @@ const RAW_WEARS=buildWears();
 //  RAW_OUTFITS — 20 saved outfits
 // ──────────────────────────────────────────
 const RAW_OUTFITS=[
-  {id:'so001',name:'Dimarts de reunions',      pieces:['si007','si026','si055','si071']},
-  {id:'so002',name:'Pas tranquil pel barri',   pieces:['si005','si027','si057','si063']},
+  {id:'so001',name:'Dimarts de reunions',      pieces:['si007','si026','si055','si071','si079']},
+  {id:'so002',name:'Pas tranquil pel barri',   pieces:['si005','si027','si057','si063','si081']},
   {id:'so003',name:'Mercat i cafè',            pieces:['si003','si021','si053','si074']},
   {id:'so004',name:'Dijous de nit',            pieces:['si039','si055','si066','si075']},
   {id:'so005',name:'Estiu de festa',           pieces:['si036','si056','si064','si073']},
   {id:'so006',name:'Mode aeroport',            pieces:['si012','si022','si053','si072']},
   {id:'so007',name:'Còctel de feina',          pieces:['si013','si026','si059','si065']},
   {id:'so008',name:'Diumenge suau',            pieces:['si011','si024','si058','si073']},
-  {id:'so009',name:"Hivern a l'oficina",       pieces:['si048','si006','si027','si057']},
+  {id:'so009',name:"Hivern a l'oficina",       pieces:['si048','si006','si027','si057','si083']},
   {id:'so010',name:'Tardor i fulles',          pieces:['si045','si022','si054','si075']},
   {id:'so011',name:'Mono de juliol',           pieces:['si037','si056','si064']},
   {id:'so012',name:'El dia a dia',             pieces:['si010','si023','si053','si065']},
@@ -270,8 +295,9 @@ const RAW_OUTFITS=[
   {id:'so016',name:'Viatge de cap de setmana', pieces:['si015','si028','si053','si072']},
   {id:'so017',name:'Primera setmana de tardor',pieces:['si010','si025','si057','si076']},
   {id:'so018',name:"Cap d'any",               pieces:['si044','si038','si061','si070']},
-  {id:'so019',name:'Platja del matí',          pieces:['si004','si028','si062','si068']},
-  {id:'so020',name:"Passeig d'hivern",         pieces:['si047','si010','si035','si057']},
+  {id:'so019',name:'Platja del matí',          pieces:['si004','si028','si062','si068','si082']},
+  {id:'so020',name:"Passeig d'hivern",         pieces:['si047','si010','si035','si057','si083']},
+  {id:'so021',name:'Dia de pluja',             pieces:['si050','si021','si055','si085']},
 ];
 
 // ──────────────────────────────────────────
