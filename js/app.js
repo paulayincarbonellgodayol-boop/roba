@@ -401,7 +401,9 @@ async function openItemModal(id){
     + '<div class="detail-row"><span class="detail-key">Formalitat</span><span class="detail-val">' + formality + '</span></div>'
     + '<div class="detail-row"><span class="detail-key">Any de compra</span><span class="detail-val">' + (item.purchaseYear||'Desconegut') + '</span></div>'
     + '<div class="detail-row"><span class="detail-key">Talla</span><span class="detail-val">' + (item.size||'No registrada') + '</span></div>'
-    + (item.notes?'<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val">'+item.notes+'</span></div>':'')
+    + (item.notes?'<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val">'+esc(item.notes)+'</span></div>':'')
+    + (item.boughtAt?'<div class="detail-row"><span class="detail-key">Lloc de compra</span><span class="detail-val">'+esc(item.boughtAt)+'</span></div>':'')
+    + (item.refLink?'<div class="detail-row"><span class="detail-key">Referència / web</span><span class="detail-val">'+(item.refLink.startsWith('http')?'<a href="'+esc(item.refLink)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">'+esc(item.refLink)+'</a>':esc(item.refLink))+'</span></div>':'')
     + (item.needsInfo?'<div class="needs-banner" style="margin-top:1rem">\u26a0\ufe0f Aquesta pe\u00e7a necessita actualitzar la informaci\u00f3.</div>':'')
     + unitsHTML
     + wearHistHTML
@@ -550,10 +552,12 @@ async function openEditItemModal(id){
       else{ typeSelect.value='__custom__'; onTypeSelectChange(); typeInput.value=item.type; }
     }
   }, 50);
-  document.getElementById('if-size').value    = item.size||'';
-  document.getElementById('if-price').value   = item.price||'';
-  document.getElementById('if-notes').value   = item.notes||'';
-  document.getElementById('if-category').value= item.category||'';
+  document.getElementById('if-size').value     = item.size||'';
+  document.getElementById('if-price').value    = item.price||'';
+  document.getElementById('if-notes').value    = item.notes||'';
+  document.getElementById('if-bought-at').value= item.boughtAt||'';
+  document.getElementById('if-ref-link').value = item.refLink||'';
+  document.getElementById('if-category').value = item.category||'';
 
   // Multi-selects
   document.querySelectorAll('#if-seasons .ms-chip').forEach(c=>{
@@ -635,6 +639,8 @@ async function submitItemForm(e){
   const size     = document.getElementById('if-size').value.trim();
   const price    = parseFloat(document.getElementById('if-price').value)||0;
   const notes    = document.getElementById('if-notes').value.trim();
+  const boughtAt = document.getElementById('if-bought-at').value.trim();
+  const refLink  = document.getElementById('if-ref-link').value.trim();
   const seasons  = getMultiSelectValues('if-seasons');
   const formality= getMultiSelectValues('if-formality');
   const tags     = [...itemTags];
@@ -651,7 +657,7 @@ async function submitItemForm(e){
     const wears = existing.wears||0;
     const cpw   = wears>0 ? totalCost/wears : totalCost;
     const updated = {...existing, brand, name, color, colors: colors_arr, type, category, size, price, notes,
-      seasons, formality, tags, units:formUnits, quantity:activeUnits, totalCost, cpw,
+      boughtAt, refLink, seasons, formality, tags, units:formUnits, quantity:activeUnits, totalCost, cpw,
       purchaseYear: formUnits[0]?.purchaseDate?.slice(0,4)||existing.purchaseYear||''};
     await dbPut('items', updated);
     toast('Peça actualitzada ✓');
@@ -659,7 +665,7 @@ async function submitItemForm(e){
     // New item
     const id = 'item_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     const item = {
-      id, brand, name, color, type, category, size, price, notes,
+      id, brand, name, color, type, category, size, price, notes, boughtAt, refLink,
       seasons, formality, tags, units:formUnits,
       quantity:activeUnits, totalCost, cpw:totalCost,
       wears:0, lastWorn:null,
