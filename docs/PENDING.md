@@ -11,7 +11,6 @@ _Update this file as items are solved or added._
 | **43** | Multiple outfits per day — decide behaviour: allow logging two outfits on the same date; clarify how historial groups/counts them and whether wears double-count | Medium | Medium | Currently ambiguous; needs a data model decision before implementing |
 | **42** | Ocasions pinned outfit detail: show full expanded card (pieces by category, wear stats, CPU) matching Guardats outfit card | Medium | Medium | Requires extracting `expandOutfitCard` into a shared helper; basic dialog exists |
 | **38** | Material de la roba — new field on item form + filter in filter bar | Easy | Medium | Same pattern as existing filters |
-| **4+23** | Places worn/bought + web link / reference code field on items | Easy | Medium | New optional fields on item form |
 | **37** | Pestanya ABOUT — credits, version, short description of app | Easy | Low | Static content tab |
 | **26** | Custom category icons | Medium | Medium | Replace text category labels with icons |
 | **30** | Statistics tab — valor total armari, cost per categoria, wear trends | Medium | High | Needs aggregation logic; reuses existing CPU/wears data |
@@ -40,6 +39,7 @@ _Update this file as items are solved or added._
 | **41** | Ocasions: clicking a pinned outfit shows detail | Floating dialog (`.hm-save-dialog` pattern) — cb91d3c |
 | **40** | OR/AND filter toggles → Catalan (ALGUN/TOTS) | Text swap in `buildMultiPanelWithFlowers` + `buildTagPanel` — cb91d3c |
 | **36** | Multi-select dropdowns don't auto-close | Confirmed not a bug: panels stay open for multi-select, close on outside click via document listener |
+| **4+23** | Places worn/bought + web link / reference code | Two optional fields on item form: `boughtAt` (free text) + `refLink` (code or URL, renders as link if http) — 242a3e8 |
 | **35** | "Nova peça" + "Més portada" overflow on narrow screens | Added `display:grid` to `@media(max-width:620px)` toolbar rule — cb91d3c |
 | **34** | Save historial outfit as named outfit — mobile layout broken | Replaced inline form with `position:fixed` overlay dialog appended to body — 5b74f42 |
 | **33** | Historial: nucleus chips toggleable to filter | Implemented chip on/off state + re-render on toggle — 5b74f42 |
